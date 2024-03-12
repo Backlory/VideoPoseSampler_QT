@@ -1,9 +1,7 @@
 #ifndef NDIMODULE_H
 #define NDIMODULE_H
 
-
-class NDIModule
-{
+class NDIModule {
 public:
     NDIModule();
 };

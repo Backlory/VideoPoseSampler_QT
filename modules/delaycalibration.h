@@ -1,11 +1,19 @@
 #ifndef DELAYCALIBRATION_H
 #define DELAYCALIBRATION_H
 
+#include <QInputDialog>
 
-class DelayCalibration
-{
+class DelayCalibration {
 public:
-    DelayCalibration();
+    DelayCalibration(QWidget *);
+    ~DelayCalibration(){};
+    //
+    void doDelayCalib();
+    int getFrameDelayMs();
+    //
+private:
+    int frameDelayMs = 0;
+    QWidget * parents;
 };
 
 #endif // DELAYCALIBRATION_H

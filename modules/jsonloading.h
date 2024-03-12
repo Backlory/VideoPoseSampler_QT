@@ -1,9 +1,7 @@
 #ifndef JSONLOADING_H
 #define JSONLOADING_H
 
-
-class JsonLoading
-{
+class JsonLoading {
 public:
     JsonLoading();
 };

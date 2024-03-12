@@ -2,8 +2,7 @@
 #define COMPORTDETECTION_H
 
 
-class COMPortDetection
-{
+class COMPortDetection {
 public:
     COMPortDetection();
 };

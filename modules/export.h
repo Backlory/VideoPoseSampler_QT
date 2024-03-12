@@ -1,9 +1,7 @@
 #ifndef EXPORT_H
 #define EXPORT_H
 
-
-class Export
-{
+class Export{
 public:
     Export();
 };

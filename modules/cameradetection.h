@@ -1,9 +1,7 @@
 #ifndef CAMERADETECTION_H
 #define CAMERADETECTION_H
 
-
-class CameraDetection
-{
+class CameraDetection{
 public:
     CameraDetection();
 };

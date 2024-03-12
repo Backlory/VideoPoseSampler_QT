@@ -1,9 +1,7 @@
 #ifndef TIMESTAMP_H
 #define TIMESTAMP_H
 
-
-class TimeStamp
-{
+class TimeStamp {
 public:
     TimeStamp();
 };

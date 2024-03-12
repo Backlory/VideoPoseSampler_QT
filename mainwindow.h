@@ -2,6 +2,17 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include <QPushButton>
+
+#include "modules/cameradetection.h"
+#include "modules/comportdetection.h"
+#include "modules/delaycalibration.h"
+#include "modules/export.h"
+#include "modules/jsonloading.h"
+#include "modules/ndimodule.h"
+#include "modules/export.h"
+#include "modules/opencvframe.h"
+#include "modules/timestamp.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -17,6 +28,9 @@ public:
 
 private:
     Ui::MainWindow *ui;
-    void uiOpencvFrame();
+    DelayCalibration *DelayClib;
+public slots:
+    void onButtonClick();
 };
+
 #endif // MAINWINDOW_H
