@@ -10,10 +10,27 @@ CONFIG += c++17
 
 SOURCES += \
     main.cpp \
-    mainwindow.cpp
+    mainwindow.cpp \
+    modules/cameradetection.cpp \
+    modules/comportdetection.cpp \
+    modules/delaycalibration.cpp \
+    modules/export.cpp \
+    modules/jsonloading.cpp \
+    modules/ndimodule.cpp \
+    modules/opencvframe.cpp \
+    modules/timestamp.cpp
 
 HEADERS += \
-    mainwindow.h
+    main.h \
+    mainwindow.h \
+    modules/cameradetection.h \
+    modules/comportdetection.h \
+    modules/delaycalibration.h \
+    modules/export.h \
+    modules/jsonloading.h \
+    modules/ndimodule.h \
+    modules/opencvframe.h \
+    modules/timestamp.h
 
 FORMS += \
     mainwindow.ui

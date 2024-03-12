@@ -17,5 +17,6 @@ public:
 
 private:
     Ui::MainWindow *ui;
+    void uiOpencvFrame();
 };
 #endif // MAINWINDOW_H
