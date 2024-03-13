@@ -9,7 +9,7 @@ public:
     ~DelayCalibration(){};
     //
     void doDelayCalib();
-    int getFrameDelayMs();
+    int getFrameDelayMs() const;
     //
 private:
     int frameDelayMs = 0;

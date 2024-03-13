@@ -8,19 +8,18 @@ MainWindow::MainWindow(QWidget *parent)
     , ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
-    // 实例化 DelayClib
+
+    // instantiation
     DelayClib = new DelayCalibration(this);
-    // 实例化 TimeStamp
     TimeStampImpl = new TimeStamp();
-
-
-    // 连接
-    connect(ui->DelyaC_Pb, &QPushButton::clicked, this, &MainWindow::onButtonClick);
-
-    // 连接时间戳，修改 timer->start(*) 内容以达到修改刷新频率的功能
     timer = new QTimer(this);
+
+    // connect
+    connect(ui->DelyaC_Pb, &QPushButton::clicked, this, &MainWindow::onDelyaC_PbClick);
     connect(timer, &QTimer::timeout, this, &MainWindow::showTimeStamp);
-    timer->start(33);
+
+    // standby
+    timer->start(100);
 }
 
 MainWindow::~MainWindow()
@@ -28,10 +27,11 @@ MainWindow::~MainWindow()
     delete ui;
     delete DelayClib;
     delete TimeStampImpl;
-
 }
 
-void MainWindow::onButtonClick() {
+// ==================== ui交互部分 ============================================//
+
+void MainWindow::onDelyaC_PbClick() {
     this->DelayClib->doDelayCalib();
     int frameDelayMs = this->DelayClib->getFrameDelayMs();
     this->ui->OpcvF_LableDetail->setText(
@@ -40,7 +40,6 @@ void MainWindow::onButtonClick() {
 }
 
 void MainWindow::showTimeStamp(){
-    //使时间戳标签显示当前的时间戳
     ui->TimeS_Label->setText("当前时间戳: \t"+this->TimeStampImpl->getTimeStamp());
 }
 

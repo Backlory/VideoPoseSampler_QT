@@ -9,6 +9,7 @@ public:
     QString getTimeStamp();
 private:
     qint64 currentTimestamp;
+    QDateTime currentDateTime;
 };
 
 #endif // TIMESTAMP_H

@@ -11,7 +11,7 @@
 #include "modules/comportdetection.h"
 #include "modules/delaycalibration.h"
 #include "modules/export.h"
-#include "modules/jsonloading.h"
+#include "modules/Configloading.h"
 #include "modules/ndimodule.h"
 #include "modules/export.h"
 #include "modules/opencvframe.h"
@@ -32,11 +32,11 @@ public:
 private:
     Ui::MainWindow *ui;
     DelayCalibration *DelayClib;
-    QTimer * timer;   // 新建一个时间定时器
+    QTimer * timer;
     TimeStamp *TimeStampImpl;
 
 public slots:
-    void onButtonClick();
+    void onDelyaC_PbClick();
     void showTimeStamp();
     //todo
 };

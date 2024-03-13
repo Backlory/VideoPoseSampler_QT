@@ -6,13 +6,8 @@
 */
 QString TimeStamp::getTimeStamp()
 {
-    // use QDataTime get the timestamp which percision to millisecond,the return is a *long long int* shows the millisecond time from 1970
-    qint64 currentTimestamp = QDateTime::currentMSecsSinceEpoch();
-    // chang the element type from *long long int* to *q date time*
-    QDateTime currentDateTime = QDateTime::fromMSecsSinceEpoch(currentTimestamp);
-    // from time to String
-    QString timestampStr = currentDateTime.toString("yyyy-MM-dd hh:mm:ss:zzz");
-
-    return timestampStr;
+    this->currentTimestamp = QDateTime::currentMSecsSinceEpoch();
+    this->currentDateTime = QDateTime::fromMSecsSinceEpoch(this->currentTimestamp);
+    return this->currentDateTime.toString("yyyyMMdd_hhmmss_zzz");
 }
 

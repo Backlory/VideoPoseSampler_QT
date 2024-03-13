@@ -8,14 +8,20 @@ CONFIG += c++17
 # In order to do so, uncomment the following line.
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
+INCLUDEPATH += \
+    ../3rdparty/OpenCV/include
+LIBS += \
+    ../3rdparty/OpenCV/x64/vc15/lib/*.lib
+
+
 SOURCES += \
     main.cpp \
     mainwindow.cpp \
+    modules/Configloading.cpp \
     modules/cameradetection.cpp \
     modules/comportdetection.cpp \
     modules/delaycalibration.cpp \
     modules/export.cpp \
-    modules/jsonloading.cpp \
     modules/ndimodule.cpp \
     modules/opencvframe.cpp \
     modules/timestamp.cpp
@@ -23,11 +29,11 @@ SOURCES += \
 HEADERS += \
     main.h \
     mainwindow.h \
+    modules/Configloading.h \
     modules/cameradetection.h \
     modules/comportdetection.h \
     modules/delaycalibration.h \
     modules/export.h \
-    modules/jsonloading.h \
     modules/ndimodule.h \
     modules/opencvframe.h \
     modules/timestamp.h
