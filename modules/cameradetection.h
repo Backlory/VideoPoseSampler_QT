@@ -5,17 +5,19 @@
 #include<string>
 
 #include "opencv2/opencv.hpp"
-//using namespace cv;
 
 class CameraDetection{
 public:
     CameraDetection();
-    ~CameraDetection();
+    ~CameraDetection(){};
 
     std::vector<std::string> detectCam();
-    void activateCam();
+    std::string getActivateCam();
+    void activateCam(const std::string);
 private:
-    cv::VideoCapture * cap;
+    bool testCam(int);
+    std::string activateCamIndex;
+
 };
 
 #endif // CAMERADETECTION_H

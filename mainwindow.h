@@ -6,6 +6,10 @@
 #include <qstring.h>
 #include <QTimer>
 #include <QDateTime>
+#include <QStandardItemModel>
+#include <QStandardItem>
+#include <QMessageBox>
+#include <QImage>
 
 #include "modules/cameradetection.h"
 #include "modules/comportdetection.h"
@@ -28,16 +32,31 @@ class MainWindow : public QMainWindow
 public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
+    void updateFrame(cv::Mat);
+    //void updatePose(std::vector<Q>);
 
 private:
     Ui::MainWindow *ui;
-    DelayCalibration *DelayClib;
+    DelayCalibration *DelayClibImpl;
+    //
     QTimer * timer;
     TimeStamp *TimeStampImpl;
+    //
+    QStandardItemModel * modelCam;
+    CameraDetection *camDetImpl;
+    //
+    OpenCVFrame * opcvFrmImpl;
+    bool onRunning = false;
+    //
+
+
 
 public slots:
+    void onTime();
     void onDelyaC_PbClick();
-    void showTimeStamp();
+    void onCamD_PbResetClick();
+    void onCamD_PbConnectClick();
+    void onExport_PbRunPauseClick();
     //todo
 };
 

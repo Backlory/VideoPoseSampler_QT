@@ -60,7 +60,7 @@
            </property>
            <widget class="QLabel" name="OpcvF_LableFrame">
             <property name="sizePolicy">
-             <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+             <sizepolicy hsizetype="Ignored" vsizetype="Ignored">
               <horstretch>2</horstretch>
               <verstretch>0</verstretch>
              </sizepolicy>
@@ -70,6 +70,9 @@
             </property>
             <property name="text">
              <string>Frame</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignCenter</set>
             </property>
            </widget>
            <widget class="QWidget" name="layoutWidget">
@@ -662,6 +665,25 @@
           </property>
           <property name="text">
            <string>时间戳：</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="Export_Pb_runPause">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="minimumSize">
+           <size>
+            <width>0</width>
+            <height>40</height>
+           </size>
+          </property>
+          <property name="text">
+           <string>启动</string>
           </property>
          </widget>
         </item>

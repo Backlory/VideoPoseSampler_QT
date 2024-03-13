@@ -9,9 +9,18 @@ CONFIG += c++17
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 INCLUDEPATH += \
-    ../3rdparty/OpenCV/include
-LIBS += \
-    ../3rdparty/OpenCV/x64/vc15/lib/*.lib
+    ../3rdparty/OpenCV/include \
+    ../3rdparty/Boost/include/boost-1_73
+
+CONFIG(debug, debug|release) {
+    LIBS += \
+        ../3rdparty/OpenCV/x64/vc15/lib/*.lib \
+        ../3rdparty/Boost/lib/*-mt-gd-x64-1_74.lib
+}else{
+    LIBS += \
+        ../3rdparty/OpenCV/x64/vc15/lib/*.lib \
+        ../3rdparty/Boost/lib/*-mt-x64-1_74.lib
+}
 
 
 SOURCES += \
