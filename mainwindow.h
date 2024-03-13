@@ -3,6 +3,9 @@
 
 #include <QMainWindow>
 #include <QPushButton>
+#include <qstring.h>
+#include <QTimer>
+#include <QDateTime>
 
 #include "modules/cameradetection.h"
 #include "modules/comportdetection.h"
@@ -29,8 +32,13 @@ public:
 private:
     Ui::MainWindow *ui;
     DelayCalibration *DelayClib;
+    QTimer * timer;   // 新建一个时间定时器
+    TimeStamp *TimeStampImpl;
+
 public slots:
     void onButtonClick();
+    void showTimeStamp();
+    //todo
 };
 
 #endif // MAINWINDOW_H
