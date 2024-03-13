@@ -30,7 +30,7 @@ private:
     Ui::MainWindow *ui;
     DelayCalibration *DelayClib;
 public slots:
-    void onButtonClick();
+    void onDelyaC_PbClick();
 };
 
 #endif // MAINWINDOW_H

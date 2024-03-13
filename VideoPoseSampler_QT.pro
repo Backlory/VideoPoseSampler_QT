@@ -8,7 +8,18 @@ CONFIG += c++17
 # In order to do so, uncomment the following line.
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
+INCLUDEPATH += \
+    ../3rdparty/Boost/include/boost-1_73/
+LIBS+= \
+    ../3rdparty/Boost/lib/*
+
 SOURCES += \
+    ../3rdparty/Aurora/Comm32.cpp \
+    ../3rdparty/Aurora/CommandConstruction.cpp \
+    ../3rdparty/Aurora/CommandHandling.cpp \
+    ../3rdparty/Aurora/Conversions.cpp \
+    ../3rdparty/Aurora/INIFileRW.cpp \
+    ../3rdparty/Aurora/SystemCRC.cpp \
     main.cpp \
     mainwindow.cpp \
     modules/cameradetection.cpp \
@@ -21,6 +32,11 @@ SOURCES += \
     modules/timestamp.cpp
 
 HEADERS += \
+    ../3rdparty/Aurora/APIStructures.h \
+    ../3rdparty/Aurora/Comm32.h \
+    ../3rdparty/Aurora/CommandHandling.h \
+    ../3rdparty/Aurora/Conversions.h \
+    ../3rdparty/Aurora/INIFileRW.h \
     main.h \
     mainwindow.h \
     modules/cameradetection.h \
