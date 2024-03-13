@@ -17,6 +17,6 @@ void DelayCalibration::doDelayCalib(){
 }
 
 
-int DelayCalibration::getFrameDelayMs(){
+int DelayCalibration::getFrameDelayMs() const {
     return this->frameDelayMs;
 }

@@ -9,9 +9,19 @@ CONFIG += c++17
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 INCLUDEPATH += \
-    ../3rdparty/Boost/include/boost-1_73/
-LIBS+= \
-    ../3rdparty/Boost/lib/*
+    ../3rdparty/OpenCV/include \
+    ../3rdparty/Boost/include/boost-1_73
+
+CONFIG(debug, debug|release) {
+    LIBS += \
+        ../3rdparty/OpenCV/x64/vc15/lib/*.lib \
+        ../3rdparty/Boost/lib/*-mt-gd-x64-1_74.lib
+}else{
+    LIBS += \
+        ../3rdparty/OpenCV/x64/vc15/lib/*.lib \
+        ../3rdparty/Boost/lib/*-mt-x64-1_74.lib
+}
+
 
 SOURCES += \
     ../3rdparty/Aurora/Comm32.cpp \
@@ -22,11 +32,11 @@ SOURCES += \
     ../3rdparty/Aurora/SystemCRC.cpp \
     main.cpp \
     mainwindow.cpp \
+    modules/Configloading.cpp \
     modules/cameradetection.cpp \
     modules/comportdetection.cpp \
     modules/delaycalibration.cpp \
     modules/export.cpp \
-    modules/jsonloading.cpp \
     modules/ndimodule.cpp \
     modules/opencvframe.cpp \
     modules/timestamp.cpp
@@ -39,11 +49,11 @@ HEADERS += \
     ../3rdparty/Aurora/INIFileRW.h \
     main.h \
     mainwindow.h \
+    modules/Configloading.h \
     modules/cameradetection.h \
     modules/comportdetection.h \
     modules/delaycalibration.h \
     modules/export.h \
-    modules/jsonloading.h \
     modules/ndimodule.h \
     modules/opencvframe.h \
     modules/timestamp.h
