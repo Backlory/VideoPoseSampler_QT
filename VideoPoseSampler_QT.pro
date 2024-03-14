@@ -10,7 +10,10 @@ CONFIG += c++17
 
 INCLUDEPATH += \
     ../3rdparty/OpenCV/include \
-    ../3rdparty/Boost/include/boost-1_73
+    ../3rdparty/Boost/include/boost-1_73 \
+    ../3rdparty/eigen/include/eigen3 \
+    ../3rdparty/sophus \
+    ../3rdparty/fmt-7.1.3/include
 
 CONFIG(debug, debug|release) {
     LIBS += \
@@ -30,6 +33,8 @@ SOURCES += \
     ../3rdparty/Aurora/Conversions.cpp \
     ../3rdparty/Aurora/INIFileRW.cpp \
     ../3rdparty/Aurora/SystemCRC.cpp \
+    ../3rdparty/fmt-7.1.3/src/format.cc \
+    ../3rdparty/fmt-7.1.3/src/os.cc \
     main.cpp \
     mainwindow.cpp \
     modules/Configloading.cpp \

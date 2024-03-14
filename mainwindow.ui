@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>774</width>
+    <width>804</width>
     <height>644</height>
    </rect>
   </property>
@@ -145,7 +145,7 @@
             <item>
              <widget class="QLabel" name="NDI_LableOut0">
               <property name="sizePolicy">
-               <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
+               <sizepolicy hsizetype="Ignored" vsizetype="Expanding">
                 <horstretch>0</horstretch>
                 <verstretch>0</verstretch>
                </sizepolicy>
@@ -167,7 +167,7 @@
                </sizepolicy>
               </property>
               <property name="text">
-               <string>通道状态：</string>
+               <string>状态：-</string>
               </property>
              </widget>
             </item>
@@ -196,6 +196,9 @@
                 </property>
                 <property name="text">
                  <string>6维</string>
+                </property>
+                <property name="checked">
+                 <bool>true</bool>
                 </property>
                </widget>
               </item>
@@ -239,7 +242,7 @@
             <item>
              <widget class="QLabel" name="NDI_LableOut1">
               <property name="sizePolicy">
-               <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
+               <sizepolicy hsizetype="Ignored" vsizetype="Expanding">
                 <horstretch>0</horstretch>
                 <verstretch>0</verstretch>
                </sizepolicy>
@@ -261,7 +264,7 @@
                </sizepolicy>
               </property>
               <property name="text">
-               <string>通道状态：</string>
+               <string>状态：-</string>
               </property>
              </widget>
             </item>
@@ -290,6 +293,9 @@
                 </property>
                 <property name="text">
                  <string>6维</string>
+                </property>
+                <property name="checked">
+                 <bool>true</bool>
                 </property>
                </widget>
               </item>
@@ -333,7 +339,7 @@
             <item>
              <widget class="QLabel" name="NDI_LableOut2">
               <property name="sizePolicy">
-               <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
+               <sizepolicy hsizetype="Ignored" vsizetype="Expanding">
                 <horstretch>0</horstretch>
                 <verstretch>0</verstretch>
                </sizepolicy>
@@ -355,7 +361,7 @@
                </sizepolicy>
               </property>
               <property name="text">
-               <string>通道状态：</string>
+               <string>状态：-</string>
               </property>
              </widget>
             </item>
@@ -384,6 +390,9 @@
                 </property>
                 <property name="text">
                  <string>6维</string>
+                </property>
+                <property name="checked">
+                 <bool>true</bool>
                 </property>
                </widget>
               </item>
@@ -427,7 +436,7 @@
             <item>
              <widget class="QLabel" name="NDI_LableOut3">
               <property name="sizePolicy">
-               <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
+               <sizepolicy hsizetype="Ignored" vsizetype="Expanding">
                 <horstretch>0</horstretch>
                 <verstretch>0</verstretch>
                </sizepolicy>
@@ -449,7 +458,7 @@
                </sizepolicy>
               </property>
               <property name="text">
-               <string>通道状态：</string>
+               <string>状态：-</string>
               </property>
              </widget>
             </item>
@@ -478,6 +487,9 @@
                 </property>
                 <property name="text">
                  <string>6维</string>
+                </property>
+                <property name="checked">
+                 <bool>true</bool>
                 </property>
                </widget>
               </item>
@@ -717,7 +729,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>774</width>
+     <width>804</width>
      <height>21</height>
     </rect>
    </property>

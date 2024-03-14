@@ -17,7 +17,7 @@ bool NDIModule::Initialize(bool forceReset) {
         if (forceReset) {
             this->Close();
         }
-        else{
+        else {
             return false;
         }
     }
@@ -34,6 +34,7 @@ bool NDIModule::Initialize(bool forceReset) {
     // load ini
     bool bResetHardware = false;
     ReadINIParm("Communication", "Reset Hardware", "0", &bResetHardware);
+
     int nComPort = 0;
     ReadINIParm("Communication", "COM Port", "0", &nComPort);
 
@@ -71,25 +72,27 @@ bool NDIModule::Initialize(bool forceReset) {
     if (!m_aurora->nActivateAllPorts()) {
         throw std::runtime_error("Ports could not be activated.");
     }
-    // 获取Handles
-    std::vector<int> ids;
-    {
-        this->m_ports = this->m_aurora->m_dtSystemInformation.nNoMagneticPorts;
-        char pszPortID[32];
-        for (int i = 0; i < m_ports; i++) {
-            sprintf_s(pszPortID, "%02d", i + 1);
-            auto id = this->m_aurora->nGetHandleForPort(pszPortID);
-            if (id != 0)
-                ids.push_back(id);
-        }
+    // 获取Handles，长度为4
+    this->handles.clear();
+    this->m_ports = this->m_aurora->m_dtSystemInformation.nNoMagneticPorts;
+    char pszPortID[32];
+    for (int i = 0; i < m_ports; i++) {
+        sprintf_s(pszPortID, "%02d", i + 1);
+        auto id = this->m_aurora->nGetHandleForPort(pszPortID);
+        if (id != 0)
+            this->handles.push_back(id);
+        else
+            this->handles.push_back(-1);
     }
     // 构造字典：端口号->矩阵。互斥锁确保端口数目不会变化。
     {
         std::lock_guard<std::mutex> _(this->m_lock);
         m_data.clear();
-        for (auto id:ids){
-            auto ptr = std::make_shared<QuatTransformationStruct>();
-            m_data.emplace(id, ptr);
+        for (auto id:this->handles) {
+            if (id > 0){
+                auto ptr = std::make_shared<QuatTransformationStruct>();
+                m_data.emplace(id, ptr);
+            }
         }
     }
     m_state = NdiActvied;
@@ -114,6 +117,10 @@ bool NDIModule::Open() {
     return true;
 }
 
+bool NDIModule::isOpened(){
+    return (this->m_state == NdiTracking);
+}
+
 bool NDIModule::Close() {
     if (this->m_state <= NdiUnTracking) {
         return true;
@@ -136,36 +143,41 @@ bool NDIModule::Close() {
     return true;
 }
 
+
+/*
+ * 遍历编号0123，输出id。
+*/
 std::vector<int> NDIModule::getHandlers() const {
-    std::vector<int> hs(m_data.size());
-    std::transform(m_data.begin(), m_data.end(), hs.begin(), [](auto& a) { return a.first; });
-    return hs;
+    return this->handles;
 }
 
-
-std::vector<QuatTransformationStruct> NDIModule::getPosition() const{
-    std::vector<QuatTransformationStruct> positions;
+/*
+ * 输出四个向量，全-1代表没开开。
+ * std::vector<int> h = NDIModule::getHandlers();
+ * std::map<int, data_ptr> p;
+ * NDIModule::getPosition(p);
+ * auto out1 = p[h[0]];
+ */
+bool NDIModule::getPosition(std::map<int, data_ptr> &positions) const {
     {
         std::lock_guard<std::mutex> _(this->m_lock);
-        for (const auto& pair : this->m_data) {
-            positions.push_back(*pair.second); //TODO
-        }
+        positions = this->m_data;
     }
-    return positions;
+    return true;
 }
 
-int NDIModule::running(){
-    while(!boost::this_thread::interruption_requested()){
-        if (this->m_state == NdiTracking){
-            if(this->m_aurora->nGetBXTransforms(true)){
+int NDIModule::running() {
+    while (!boost::this_thread::interruption_requested()) {
+        if (this->m_state == NdiTracking) {
+            if(this->m_aurora->nGetTXTransforms(true)) {
                 // get data
                 std::map<int, QuatTransformationStruct> data;
-                for (auto ite = this->m_data.begin(); ite!= this->m_data.end(); ++ite){
+                for (auto ite = this->m_data.begin(); ite!= this->m_data.end(); ++ite) {
                     int i = ite->first;
-                    if (this->m_aurora->m_dtHandleInformation[i].Xfrms.ulFlags == TRANSFORM_VALID){
+                    if (this->m_aurora->m_dtHandleInformation[i].Xfrms.ulFlags == TRANSFORM_VALID) {
+                        QuatTransformationStruct d;
                         auto& _pos = this->m_aurora->m_dtHandleInformation[i].Xfrms.translation;
                         auto& _rot = this->m_aurora->m_dtHandleInformation[i].Xfrms.rotation;
-                        QuatTransformationStruct d;
                         d.rotation = _rot;
                         d.translation = _pos;
                         data.emplace(i, d);
@@ -175,7 +187,7 @@ int NDIModule::running(){
                 {
                     std::lock_guard<std::mutex> _(this->m_lock);
                     for (auto& d : data) {
-                        this->m_data.at(d.first)=std::make_shared<QuatTransformationStruct>(d.second);
+                        this->m_data.at(d.first) = std::make_shared<QuatTransformationStruct>(d.second);
                     }
                 }
             }

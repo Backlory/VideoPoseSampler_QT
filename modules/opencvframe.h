@@ -18,7 +18,7 @@ public:
     bool Open(const int);
     bool Close();
     bool isOpened();
-    cv::Mat getFrame();
+    bool getFrame(cv::Mat &);
     std::string getInfo();
 private:
 
@@ -29,7 +29,6 @@ private:
     cv::VideoCapture* cap;
     bool _Reset();
     cv::Mat frame_inflow;
-    cv::Mat frame_out;
 
     int onRunning();
     std::shared_ptr<boost::thread> m_thread;

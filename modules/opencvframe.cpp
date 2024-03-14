@@ -97,10 +97,8 @@ std::string OpenCVFrame::getInfo(){
 /*
  * 获取视频流的帧。加锁截取一帧，转换为RGB格式并返回
 */
-cv::Mat OpenCVFrame::getFrame(){
-    {
-        std::lock_guard<std::mutex> _(m_lock);
-        cv::cvtColor(this->frame_inflow, this->frame_out, cv::COLOR_BGR2RGB);
-        return this->frame_out;
-    }
+bool OpenCVFrame::getFrame(cv::Mat &fm){
+    std::lock_guard<std::mutex> _(m_lock);
+    cv::cvtColor(this->frame_inflow, fm, cv::COLOR_BGR2RGB);
+    return true;
 }
