@@ -13,11 +13,15 @@ MainWindow::MainWindow(QWidget *parent)
     // instantiation
     timer = new QTimer(this);
     timer->setSingleShot(false);
+    camDetImpl = new CameraDetection();
+    comDetImpl = new COMPortDetection();
     modelCam = new QStandardItemModel(this);
+    modelCom = new QStandardItemModel(this);
 
     DelayClibImpl = new DelayCalibration(this);
     TimeStampImpl = new TimeStamp();
-    camDetImpl = new CameraDetection();
+    exptImpl = new Export();
+
     opcvFrmImpl = &OpenCVFrame::GetInstance();
     ndiImpl = &NDIModule::GetInstance();
 
@@ -29,16 +33,9 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->ComD_PbReset, &QPushButton::clicked, this, &MainWindow::onComD_PbResetClick);
     connect(ui->ComD_PbConnect, &QPushButton::clicked, this, &MainWindow::onComD_PbConnectClick);
 
-    connect(ui->Export_Pb_runPause, &QPushButton::clicked, this, &MainWindow::onExport_PbRunPauseClick);
+    connect(ui->Export_PbRunPause, &QPushButton::clicked, this, &MainWindow::onExport_PbRunPauseClick);
+    connect(ui->Export_Pb, &QPushButton::clicked, this, &MainWindow::onExport_PbClick);
 
-    connect(ui->NDI_Rb0_6, &QPushButton::clicked, this, &MainWindow::onNDI_Rb0_6Click); // 选择6维
-    connect(ui->NDI_Rb1_6, &QPushButton::clicked, this, &MainWindow::onNDI_Rb1_6Click);
-    connect(ui->NDI_Rb2_6, &QPushButton::clicked, this, &MainWindow::onNDI_Rb2_6Click);
-    connect(ui->NDI_Rb3_6, &QPushButton::clicked, this, &MainWindow::onNDI_Rb3_6Click);
-    connect(ui->NDI_Rb0_4, &QPushButton::clicked, this, &MainWindow::onNDI_Rb0_4Click); // 选择4阶
-    connect(ui->NDI_Rb1_4, &QPushButton::clicked, this, &MainWindow::onNDI_Rb1_4Click);
-    connect(ui->NDI_Rb2_4, &QPushButton::clicked, this, &MainWindow::onNDI_Rb2_4Click);
-    connect(ui->NDI_Rb3_4, &QPushButton::clicked, this, &MainWindow::onNDI_Rb3_4Click);
     connect(ui->NDI_Cb0, &QPushButton::clicked, this, &MainWindow::onNDI_Cb0Click);
     connect(ui->NDI_Cb1, &QPushButton::clicked, this, &MainWindow::onNDI_Cb1Click);
     connect(ui->NDI_Cb2, &QPushButton::clicked, this, &MainWindow::onNDI_Cb2Click);
@@ -55,6 +52,7 @@ MainWindow::~MainWindow()
     delete DelayClibImpl;
     delete TimeStampImpl;
     delete camDetImpl;
+    delete exptImpl;
 }
 
 // ==================== ui交互部分 ============================================//
@@ -82,7 +80,7 @@ QString pose2str(QuatTransformationStruct * m){
     return str;
 }
 
-void MainWindow::updatePose(const std::map<int, data_ptr> poseMap){
+void MainWindow::updatePose(const std::map<int, data_ptr7> poseMap){
     if (this->ndiActivated0 && this->ndiHandle[0]>0){
         auto m = poseMap.at(this->ndiHandle[0]);
         ui->NDI_LableOut0->setText(pose2str(m.get()));
@@ -113,20 +111,38 @@ void MainWindow::onTime(){
     // 时间戳更新
     ui->TimeS_Label->setText("当前时间戳: \t"+this->TimeStampImpl->getTimeStamp());
     // 更新画面
-    cv::Mat cvframe;
-    std::map<int, data_ptr> ndiData;
-    if (this->opcvFrmImpl->isOpened()){
+    if (this->opcvFrmImpl->isOpened()) {
         this->opcvFrmImpl->getFrame(this->cvframe);
         this->updateFrame(this->cvframe);
-        std::string details = opcvFrmImpl->getInfo();
-        ui->OpcvF_LableDetail->setText(QString::fromStdString(details));
+        auto details = QString::fromStdString(opcvFrmImpl->getInfo());
+        details += "导出序号：" +  QString::number(this->exptIdx) + "\n";
+        details += "导出位置：" + this->exptFolderPath + "\n";
+        ui->OpcvF_LableDetail->setText(details);
     }
     // 更新位姿
     if (this->ndiImpl->isOpened()){
-        this->ndiImpl->getPosition(this->ndiData);
-        this->updatePose(this->ndiData);
+        this->ndiImpl->getPosition(this->ndiData7);
+        this->updatePose(this->ndiData7);
     }
     // 数据导出
+    if (this->onExporting){
+        if (this->ndiImpl->isOpened() || this->opcvFrmImpl->isOpened()){
+//            switch(this->ndiOutputType){
+//            case 4:
+//                this->exptImpl->d7to4(ndiData7, ndiData4);
+//                this->exptImpl->exportData<data_ptr4>(exptIdx, cvframe, ndiData4, TimeStampImpl->getTimeStamp(), exptFolderPath);
+//                break;
+//            case 6:
+//                this->exptImpl->d7to6(ndiData7, ndiData6);
+//                this->exptImpl->exportData<data_ptr6>(exptIdx, cvframe, ndiData6, TimeStampImpl->getTimeStamp(), exptFolderPath);
+//                break;
+//            case 7:
+//                this->exptImpl->exportData<data_ptr7>(exptIdx, cvframe, ndiData7, TimeStampImpl->getTimeStamp(), exptFolderPath);
+//                break;
+//            }
+            this->exptIdx ++;
+        }
+    }
 }
 void MainWindow::onDelyaC_PbClick() {
     this->DelayClibImpl->doDelayCalib();
@@ -144,7 +160,7 @@ void MainWindow::onCamD_PbResetClick(){
     if (this->onRunning == true){
         this->onRunning = false;
         this->timer->stop();
-        this->ui->Export_Pb_runPause->setText("启动");
+        this->ui->Export_PbRunPause->setText("启动");
     }
     // 清空
     modelCam->clear();
@@ -179,7 +195,7 @@ void MainWindow::onCamD_PbConnectClick(){
     if (this->onRunning == false){
         this->onRunning = true;
         this->timer->start(10);
-        this->ui->Export_Pb_runPause->setText("暂停");
+        this->ui->Export_PbRunPause->setText("暂停");
     }
 }
 
@@ -189,21 +205,68 @@ void MainWindow::onExport_PbRunPauseClick(){
     if (this->timer->isActive()){
         this->onRunning = false;
         this->timer->stop();
-        this->ui->Export_Pb_runPause->setText("启动");
+        this->ui->Export_PbRunPause->setText("启动");
+        this->onExporting = false;
+        this->ui->Export_Pb->setText("开始采集（到本地）");
+        this->ui->Export_Pb->setEnabled(false);
     }
     else{
         this->onRunning = true;
         this->timer->start(1000/30);
-        this->ui->Export_Pb_runPause->setText("暂停");
+        this->ui->Export_PbRunPause->setText("暂停");
+        this->ui->Export_Pb->setEnabled(true);
     }
+}
 
+void MainWindow::onExport_PbClick() {
+    if (this->onRunning){
+        if (this->onExporting == true) {
+            this->onExporting = false;
+            this->ui->Export_Pb->setText("开始采集（到本地）");
+            this->ndiOutputType = -1;
+        }
+        else{
+            bool bOK = false;
+            int temp = QInputDialog::getInt(this, "导出类型", "4-四阶位姿矩阵\n6-欧拉角\n7-四元数",
+                                                 7, 0, 7, 1, &bOK);
+            if (bOK && (temp == 4||temp == 6|| temp == 7)){
+                this->ndiOutputType = temp;
+                this->onExporting = true;
+                this->ui->Export_Pb->setText("停止本地采集");
+                //
+                this->exptIdx = 0;
+                this->exptFolderPath = "SampleOutput/" + this->TimeStampImpl->getTimeStamp();
+                this->exptImpl->createFolder(exptFolderPath);
+            }
+        }
+    }
 }
 
 // ====== 03 COM口 交互 ======
 void MainWindow::onComD_PbResetClick(){
-    // 清空COM口列表
-    // 关闭电磁定位
-    // 清空所有复选框
+    // 关闭播放
+    if (this->onRunning == true){
+        this->onRunning = false;
+        this->timer->stop();
+        this->ui->Export_PbRunPause->setText("启动");
+    }
+    // 清空
+    modelCom->clear();
+    QApplication::processEvents();
+    // 关闭端口
+    this->ndiImpl->Close();
+    ui->ComD_Label->setText("当前端口: 关闭");
+
+    // 检查相机列表
+    std::vector<std::string> comList = comDetImpl->getAvailablePorts();
+    for(int i=0; i<comList.size(); i++){
+        QStandardItem *item = new QStandardItem(QString::fromStdString(comList.at(i)));
+        modelCom->appendRow(item);
+    }
+    // 加载到列表
+    ui->ComD_ListView->setModel(modelCom);
+    ui->ComD_ListView->setCurrentIndex(modelCom->index(0, 0));
+    QApplication::processEvents();
     return;
 }
 void MainWindow::onComD_PbConnectClick(){
@@ -216,10 +279,19 @@ void MainWindow::onComD_PbConnectClick(){
     if (this->ndiImpl->isOpened()){
         this->ndiImpl->Close();
     }
-    ndiImpl->Initialize(true);
-    ndiImpl->Open();
-    this->ndiHandle = this->ndiImpl->getHandlers();
-    assert(ndiHandle.size() == 4);
+    // 读取
+    std::string comName = ui->ComD_ListView->currentIndex().data().toString().toStdString();
+    this->comDetImpl->activateCOM(comName);
+    try {
+        ndiImpl->Initialize(true, this->comDetImpl->getActivateCOM());
+        ndiImpl->Open();
+        this->ndiHandle = this->ndiImpl->getHandlers();
+        assert(ndiHandle.size() == 4);
+    }
+    catch (std::runtime_error &e) {
+        QMessageBox::warning(this, "错误", QString::fromStdString(e.what()));
+        return;
+    }
     // ui更新
     if (this->ndiHandle[0]>0) {
         this->ui->NDI_LableState0->setText("状态：connected");
@@ -249,31 +321,15 @@ void MainWindow::onComD_PbConnectClick(){
 }
 
 // ====== 04 NDI 交互 ======
-void MainWindow::onNDI_Rb0_6Click(){this->ndiOutputType0 = 6; return;}
-void MainWindow::onNDI_Rb1_6Click(){this->ndiOutputType0 = 6; return;}
-void MainWindow::onNDI_Rb2_6Click(){this->ndiOutputType0 = 6; return;}
-void MainWindow::onNDI_Rb3_6Click(){this->ndiOutputType0 = 6; return;}
-void MainWindow::onNDI_Rb0_4Click(){this->ndiOutputType0 = 4; return;}
-void MainWindow::onNDI_Rb1_4Click(){this->ndiOutputType0 = 4; return;}
-void MainWindow::onNDI_Rb2_4Click(){this->ndiOutputType0 = 4; return;}
-void MainWindow::onNDI_Rb3_4Click(){this->ndiOutputType0 = 4; return;}
 void MainWindow::onNDI_Cb0Click(){
     this->ndiActivated0 = ui->NDI_Cb0->isChecked();
-    this->ui->NDI_Rb0_4->setEnabled(this->ndiActivated0);
-    this->ui->NDI_Rb0_6->setEnabled(this->ndiActivated0);
 }
 void MainWindow::onNDI_Cb1Click(){
     this->ndiActivated1 = ui->NDI_Cb1->isChecked();
-    this->ui->NDI_Rb1_4->setEnabled(this->ndiActivated1);
-    this->ui->NDI_Rb1_6->setEnabled(this->ndiActivated1);
 }
 void MainWindow::onNDI_Cb2Click(){
     this->ndiActivated2 = ui->NDI_Cb2->isChecked();
-    this->ui->NDI_Rb2_4->setEnabled(this->ndiActivated2);
-    this->ui->NDI_Rb2_6->setEnabled(this->ndiActivated2);
 }
 void MainWindow::onNDI_Cb3Click(){
     this->ndiActivated3 = ui->NDI_Cb3->isChecked();
-    this->ui->NDI_Rb3_4->setEnabled(this->ndiActivated3);
-    this->ui->NDI_Rb3_6->setEnabled(this->ndiActivated3);
 }

@@ -2,16 +2,23 @@
 #define COMPORTDETECTION_H
 
 #include "../3rdparty/Aurora/INIFileRW.h"
+#include <string>
+#include <vector>
+#include "boost/asio.hpp"
 
 class COMPortDetection {
 public:
-    COMPortDetection();
-    ~COMPortDetection();
+    COMPortDetection(){};
+    ~COMPortDetection(){};
 
-    void detectCOM();
-    void updateINIParam(int COM); //点击确定后，更新ini文件，然后NDI Initialize(true)
+    std::vector<std::string> getAvailablePorts();
+    int getActivateCOM() const;
+    void activateCOM(std::string);
+
 private:
-    int portCOM = -1;
+    int COMIndex = -1;
+    std::vector<std::string> ports;
+    std::map<std::string, int> idx2ports;
 };
 
 #endif // COMPORTDETECTION_H

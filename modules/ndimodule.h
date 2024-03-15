@@ -2,14 +2,19 @@
 #define NDIMODULE_H
 
 #include <vector>
+#include "Sophus/so3.hpp"
 #include "../3rdparty/Aurora/INIFileRW.h"
-#include "../3rdparty/Aurora/CommandHandling.h"
-#include <boost/signals2.hpp>
+#include "../3rdparty/Aurora/CommandHandling.h" // 在Sophus后导入
 #include <boost/thread.hpp>
+#include <Eigen/Dense>
 
-using data_ptr = std::shared_ptr<QuatTransformationStruct>;
+
 
 class NDIModule {
+    using data_ptr4 = std::shared_ptr<Eigen::Matrix4d>;
+    using data_ptr6 = std::shared_ptr<Sophus::Vector6d>;
+    using data_ptr7 = std::shared_ptr<QuatTransformationStruct>;
+
 public:
     // NDI device init
     typedef enum : int {
@@ -27,14 +32,14 @@ public:
         static NDIModule device;
         return device;
     }
-    bool Initialize(bool forceReset = false);
+    bool Initialize(bool forceReset = false, int comPort = -1);
     bool Open();
     bool Close();
     bool isOpened();
 
     std::vector<int> getHandlers() const;
-    bool getPosition(std::map<int, data_ptr> &positions) const;
-    boost::signals2::signal<void(int, QuatTransformationStruct)> OnUpdate;
+    bool getPosition(std::map<int, data_ptr7> &positions) const;
+
 
 private:
     NDIModule();
@@ -47,7 +52,7 @@ private:
     std::shared_ptr<CCommandHandling> m_aurora;
     std::atomic<int> m_ports = -1;
     std::atomic<State_t> m_state = { NdiClosed };
-    std::map<int, data_ptr> m_data;
+    std::map<int, data_ptr7> m_data;
     mutable std::mutex m_lock;
 
     std::vector<int> handles;

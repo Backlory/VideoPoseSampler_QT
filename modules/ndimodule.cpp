@@ -12,7 +12,7 @@ NDIModule::~NDIModule() {
     }
 }
 
-bool NDIModule::Initialize(bool forceReset) {
+bool NDIModule::Initialize(bool forceReset, int comPort) {
     if (this->m_state >= NdiReseted) {
         if (forceReset) {
             this->Close();
@@ -36,7 +36,10 @@ bool NDIModule::Initialize(bool forceReset) {
     ReadINIParm("Communication", "Reset Hardware", "0", &bResetHardware);
 
     int nComPort = 0;
-    ReadINIParm("Communication", "COM Port", "0", &nComPort);
+    if (comPort > 0)
+        nComPort = comPort;
+    else
+        ReadINIParm("Communication", "COM Port", "0", &nComPort);
 
     // When reseted, and the NDI baudrate is to be changed, should be 9600 for communication.
     if (!m_aurora->nOpenComPort(nComPort)) {
@@ -154,11 +157,11 @@ std::vector<int> NDIModule::getHandlers() const {
 /*
  * 输出四个向量，全-1代表没开开。
  * std::vector<int> h = NDIModule::getHandlers();
- * std::map<int, data_ptr> p;
+ * std::map<int, data_ptr7> p;
  * NDIModule::getPosition(p);
  * auto out1 = p[h[0]];
  */
-bool NDIModule::getPosition(std::map<int, data_ptr> &positions) const {
+bool NDIModule::getPosition(std::map<int, data_ptr7> &positions) const {
     {
         std::lock_guard<std::mutex> _(this->m_lock);
         positions = this->m_data;

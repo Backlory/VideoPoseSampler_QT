@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>804</width>
-    <height>644</height>
+    <width>934</width>
+    <height>679</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -185,39 +185,6 @@
              </widget>
             </item>
             <item>
-             <layout class="QHBoxLayout" name="horizontalLayout_6">
-              <item>
-               <widget class="QRadioButton" name="NDI_Rb0_6">
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
-                <property name="text">
-                 <string>6维</string>
-                </property>
-                <property name="checked">
-                 <bool>true</bool>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QRadioButton" name="NDI_Rb0_4">
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
-                <property name="text">
-                 <string>4阶</string>
-                </property>
-               </widget>
-              </item>
-             </layout>
-            </item>
-            <item>
              <widget class="QCheckBox" name="NDI_Cb0">
               <property name="sizePolicy">
                <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
@@ -280,39 +247,6 @@
                <string>输出类型：</string>
               </property>
              </widget>
-            </item>
-            <item>
-             <layout class="QHBoxLayout" name="horizontalLayout_7">
-              <item>
-               <widget class="QRadioButton" name="NDI_Rb1_6">
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
-                <property name="text">
-                 <string>6维</string>
-                </property>
-                <property name="checked">
-                 <bool>true</bool>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QRadioButton" name="NDI_Rb1_4">
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
-                <property name="text">
-                 <string>4阶</string>
-                </property>
-               </widget>
-              </item>
-             </layout>
             </item>
             <item>
              <widget class="QCheckBox" name="NDI_Cb1">
@@ -379,39 +313,6 @@
              </widget>
             </item>
             <item>
-             <layout class="QHBoxLayout" name="horizontalLayout_8">
-              <item>
-               <widget class="QRadioButton" name="NDI_Rb2_6">
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
-                <property name="text">
-                 <string>6维</string>
-                </property>
-                <property name="checked">
-                 <bool>true</bool>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QRadioButton" name="NDI_Rb2_4">
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
-                <property name="text">
-                 <string>4阶</string>
-                </property>
-               </widget>
-              </item>
-             </layout>
-            </item>
-            <item>
              <widget class="QCheckBox" name="NDI_Cb2">
               <property name="sizePolicy">
                <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
@@ -474,39 +375,6 @@
                <string>输出类型：</string>
               </property>
              </widget>
-            </item>
-            <item>
-             <layout class="QHBoxLayout" name="horizontalLayout_9">
-              <item>
-               <widget class="QRadioButton" name="NDI_Rb3_6">
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
-                <property name="text">
-                 <string>6维</string>
-                </property>
-                <property name="checked">
-                 <bool>true</bool>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QRadioButton" name="NDI_Rb3_4">
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
-                <property name="text">
-                 <string>4阶</string>
-                </property>
-               </widget>
-              </item>
-             </layout>
             </item>
             <item>
              <widget class="QCheckBox" name="NDI_Cb3">
@@ -639,35 +507,6 @@
          </widget>
         </item>
         <item>
-         <widget class="QLabel" name="JsonL_Label">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="styleSheet">
-           <string notr="true">border: 1px solid black;</string>
-          </property>
-          <property name="text">
-           <string>当前Aurora配置：</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QPushButton" name="JsonL_Pb">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="text">
-           <string>加载Aurora配置...</string>
-          </property>
-         </widget>
-        </item>
-        <item>
          <widget class="QLabel" name="TimeS_Label">
           <property name="sizePolicy">
            <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
@@ -681,7 +520,7 @@
          </widget>
         </item>
         <item>
-         <widget class="QPushButton" name="Export_Pb_runPause">
+         <widget class="QPushButton" name="Export_PbRunPause">
           <property name="sizePolicy">
            <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
             <horstretch>0</horstretch>
@@ -714,7 +553,26 @@
            </size>
           </property>
           <property name="text">
-           <string>开始采集</string>
+           <string>开始采集（到本地）</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="Export_Pb_HTTP">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="minimumSize">
+           <size>
+            <width>0</width>
+            <height>40</height>
+           </size>
+          </property>
+          <property name="text">
+           <string>开始采集（到HTTP端口）</string>
           </property>
          </widget>
         </item>
@@ -729,7 +587,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>804</width>
+     <width>934</width>
      <height>21</height>
     </rect>
    </property>
