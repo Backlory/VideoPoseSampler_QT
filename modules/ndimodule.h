@@ -52,7 +52,7 @@ private:
     std::shared_ptr<CCommandHandling> m_aurora;
     std::atomic<int> m_ports = -1;
     std::atomic<State_t> m_state = { NdiClosed };
-    std::map<int, data_ptr7> m_data;
+    std::map<int, data_ptr7> m_data; // 10:xx
     mutable std::mutex m_lock;
 
     std::vector<int> handles;

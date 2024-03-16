@@ -15,6 +15,7 @@ MainWindow::MainWindow(QWidget *parent)
     timer->setSingleShot(false);
     camDetImpl = new CameraDetection();
     comDetImpl = new COMPortDetection();
+
     modelCam = new QStandardItemModel(this);
     modelCom = new QStandardItemModel(this);
 
@@ -60,27 +61,88 @@ MainWindow::~MainWindow()
     * 更新画面
     * @param frame: 画面帧
 */
-void MainWindow::updateFrame(const cv::Mat frame){
-    QImage img = QImage((const unsigned char*)(frame.data), frame.cols, frame.rows, QImage::Format_RGB888);
+void MainWindow::updateFrame(const cv::Mat & frame){
+
+    cv::cvtColor(frame, cvframeDisp, cv::COLOR_BGR2RGB);
+    QImage img = QImage((const unsigned char*)(cvframeDisp.data), cvframeDisp.cols, cvframeDisp.rows, QImage::Format_RGB888);
     QPixmap img2 = QPixmap::fromImage(img).scaled(ui->OpcvF_LableFrame->size(), Qt::KeepAspectRatio,Qt::SmoothTransformation);
-    //QPixmap img2 = QPixmap::fromImage(img);
     ui->OpcvF_LableFrame->setPixmap(img2);
     QApplication::processEvents();
 }
 
 QString pose2str(QuatTransformationStruct * m){
     QString str;
-    str += QString::number(m->translation.x) + ",";
-    str += QString::number(m->translation.y) + ",";
-    str += QString::number(m->translation.z) + "\n";
-    str += QString::number(m->rotation.q0) + ",";
-    str += QString::number(m->rotation.qx) + ",";
-    str += QString::number(m->rotation.qy) + ",";
-    str += QString::number(m->rotation.qz);
+    str += "x:" + QString::number(m->translation.x) + "\n";
+    str += "y:" + QString::number(m->translation.y) + "\n";
+    str += "z:" + QString::number(m->translation.z) + "\n";
+    str += "q0:" + QString::number(m->rotation.q0) + "\n";
+    str += "qx:" + QString::number(m->rotation.qx) + "\n";
+    str += "qy:" + QString::number(m->rotation.qy) + "\n";
+    str += "qz:" + QString::number(m->rotation.qz);
     return str;
 }
 
 void MainWindow::updatePose(const std::map<int, data_ptr7> poseMap){
+    if (this->ndiActivated0 && this->ndiHandle[0]>0){
+        auto m = poseMap.at(this->ndiHandle[0]);
+        ui->NDI_LableOut0->setText(pose2str(m.get()));
+    }
+    if (this->ndiActivated1 && this->ndiHandle[1]>0){
+        auto m = poseMap.at(this->ndiHandle[1]);
+        ui->NDI_LableOut1->setText(pose2str(m.get()));
+    }
+    if (this->ndiActivated2 && this->ndiHandle[2]>0){
+        auto m = poseMap.at(this->ndiHandle[2]);
+        ui->NDI_LableOut2->setText(pose2str(m.get()));
+    }
+    if (this->ndiActivated3 && this->ndiHandle[3]>0){
+        auto m = poseMap.at(this->ndiHandle[3]);
+        ui->NDI_LableOut3->setText("NDI0: \n" + pose2str(m.get()));
+    }
+}
+
+QString pose2str(Eigen::Matrix4d * m){
+    QString str;
+    auto i2s = [&m](int i, int j){return QString::number((*m)(i,j));};
+    str += "T=" + i2s(0,3) + ", " + i2s(1,3) + ", " + i2s(2,3) + "\n";
+    str += "R=" + i2s(0,0) + ", " + i2s(0,1) + ", " + i2s(0,2) + "\n";
+    str += "   " + i2s(1,0) + ", " + i2s(1,1) + ", " + i2s(1,2) + "\n";
+    str += "   " + i2s(2,0) + ", " + i2s(2,1) + ", " + i2s(2,2);
+    return str;
+}
+
+void MainWindow::updatePose(const std::map<int, data_ptr4> poseMap){
+    if (this->ndiActivated0 && this->ndiHandle[0]>0){
+        auto m = poseMap.at(this->ndiHandle[0]);
+        ui->NDI_LableOut0->setText(pose2str(m.get()));
+    }
+    if (this->ndiActivated1 && this->ndiHandle[1]>0){
+        auto m = poseMap.at(this->ndiHandle[1]);
+        ui->NDI_LableOut1->setText(pose2str(m.get()));
+    }
+    if (this->ndiActivated2 && this->ndiHandle[2]>0){
+        auto m = poseMap.at(this->ndiHandle[2]);
+        ui->NDI_LableOut2->setText(pose2str(m.get()));
+    }
+    if (this->ndiActivated3 && this->ndiHandle[3]>0){
+        auto m = poseMap.at(this->ndiHandle[3]);
+        ui->NDI_LableOut3->setText("NDI0: \n" + pose2str(m.get()));
+    }
+}
+
+QString pose2str(Sophus::Vector6d * m){
+    QString str;
+    auto i2s = [&m](int i){return QString::number((*m)(i));};
+    str += "x:" + i2s(0) + "\n";
+    str += "y:" + i2s(1) + "\n";
+    str += "z:" + i2s(2) + "\n";
+    str += "rx:" + i2s(3) + "\n";
+    str += "ry:" + i2s(4) + "\n";
+    str += "rz:" + i2s(5);
+    return str;
+}
+
+void MainWindow::updatePose(const std::map<int, data_ptr6> poseMap){
     if (this->ndiActivated0 && this->ndiHandle[0]>0){
         auto m = poseMap.at(this->ndiHandle[0]);
         ui->NDI_LableOut0->setText(pose2str(m.get()));
@@ -121,25 +183,46 @@ void MainWindow::onTime(){
     }
     // 更新位姿
     if (this->ndiImpl->isOpened()){
-        this->ndiImpl->getPosition(this->ndiData7);
-        this->updatePose(this->ndiData7);
+        this->ndiData7.clear();
+        this->ndiImpl->getPosition(this->ndiData7); //尺寸未知
+        switch(this->ndiOutputType){
+        case 4:
+            this->exptImpl->d7to4(ndiData7, ndiData4);
+            this->updatePose(this->ndiData4);
+            break;
+        case 6:
+            this->exptImpl->d7to6(ndiData7, ndiData6);
+            this->updatePose(this->ndiData6);
+            break;
+        case 7:
+            this->updatePose(this->ndiData7);
+            break;
+        }
     }
     // 数据导出
     if (this->onExporting){
-        if (this->ndiImpl->isOpened() || this->opcvFrmImpl->isOpened()){
-//            switch(this->ndiOutputType){
-//            case 4:
-//                this->exptImpl->d7to4(ndiData7, ndiData4);
-//                this->exptImpl->exportData<data_ptr4>(exptIdx, cvframe, ndiData4, TimeStampImpl->getTimeStamp(), exptFolderPath);
-//                break;
-//            case 6:
-//                this->exptImpl->d7to6(ndiData7, ndiData6);
-//                this->exptImpl->exportData<data_ptr6>(exptIdx, cvframe, ndiData6, TimeStampImpl->getTimeStamp(), exptFolderPath);
-//                break;
-//            case 7:
-//                this->exptImpl->exportData<data_ptr7>(exptIdx, cvframe, ndiData7, TimeStampImpl->getTimeStamp(), exptFolderPath);
-//                break;
-//            }
+        this->ui->NDI_LableType0->setText("导出类型："+QString::number(this->ndiOutputType));
+        this->ui->NDI_LableType1->setText("导出类型："+QString::number(this->ndiOutputType));
+        this->ui->NDI_LableType2->setText("导出类型："+QString::number(this->ndiOutputType));
+        this->ui->NDI_LableType3->setText("导出类型："+QString::number(this->ndiOutputType));
+        if (this->ndiImpl->isOpened() ){
+            switch(this->ndiOutputType){
+            case 4:
+                this->exptImpl->exportData<data_ptr4>(exptIdx, cvframe,
+                                                      ndiHandle, ndiData4,
+                                                      TimeStampImpl->getTimeStamp(), exptFolderPath);
+                break;
+            case 6:
+                this->exptImpl->exportData<data_ptr6>(exptIdx, cvframe,
+                                                      ndiHandle, ndiData6,
+                                                      TimeStampImpl->getTimeStamp(), exptFolderPath);
+                break;
+            case 7:
+                this->exptImpl->exportData<data_ptr7>(exptIdx, cvframe,
+                                                      ndiHandle, ndiData7,
+                                                      TimeStampImpl->getTimeStamp(), exptFolderPath);
+                break;
+            }
             this->exptIdx ++;
         }
     }
@@ -212,7 +295,7 @@ void MainWindow::onExport_PbRunPauseClick(){
     }
     else{
         this->onRunning = true;
-        this->timer->start(1000/30);
+        this->timer->start(1000/30); //FPS
         this->ui->Export_PbRunPause->setText("暂停");
         this->ui->Export_Pb->setEnabled(true);
     }

@@ -56,14 +56,17 @@ private:
     bool onRunning = false;
     bool onExporting = false;
     cv::Mat cvframe;
-    std::vector<int> ndiHandle;
-    std::map<int, data_ptr4> ndiData4;
+    cv::Mat cvframeDisp;
+    std::vector<int> ndiHandle;  //idx->port name, size == 4
+    std::map<int, data_ptr4> ndiData4;  //port name -> port value
     std::map<int, data_ptr6> ndiData6;
     std::map<int, data_ptr7> ndiData7;
-    void updateFrame(const cv::Mat);
+    void updateFrame(const cv::Mat &);
     void updatePose(const std::map<int, data_ptr7>);
+    void updatePose(const std::map<int, data_ptr6>);
+    void updatePose(const std::map<int, data_ptr4>);
     // ndi显示
-    int ndiOutputType = -1;
+    int ndiOutputType = 6;
     bool ndiActivated0 = false;
     bool ndiActivated1 = false;
     bool ndiActivated2 = false;

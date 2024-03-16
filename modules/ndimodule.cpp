@@ -185,6 +185,13 @@ int NDIModule::running() {
                         d.translation = _pos;
                         data.emplace(i, d);
                     }
+                    else
+                    {
+                        QuatTransformationStruct d;
+                        d.rotation = { 0,0,0,0 };
+                        d.translation = { -1, -1, -1 };
+                        data.emplace(i, d);
+                    }
                 }
                 //to ensure all value in m_data are sampled at the same time.
                 {

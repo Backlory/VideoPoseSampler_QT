@@ -99,6 +99,6 @@ std::string OpenCVFrame::getInfo(){
 */
 bool OpenCVFrame::getFrame(cv::Mat &fm){
     std::lock_guard<std::mutex> _(m_lock);
-    cv::cvtColor(this->frame_inflow, fm, cv::COLOR_BGR2RGB);
+    this->frame_inflow.copyTo(fm);
     return true;
 }
