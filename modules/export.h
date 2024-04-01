@@ -4,6 +4,8 @@
 #include <QString>
 #include <QDir>
 
+#include <WinSock2.h>
+
 #include "../3rdparty/Aurora/APIStructures.h"
 #include "opencv2/opencv.hpp"
 #include "Sophus/so3.hpp"
@@ -29,8 +31,14 @@ public:
                     const std::vector<int>, const std::map<int, T>,
                     QString, QString) const;
 
+
+    // ======== Socket ============
+    bool SocketInit(std::string adddress = "127.0.0.1", int port = 2345);
+    bool SocketClose();
     template <typename T>
-    void ndiData2QString(const T data, QString &) const;
+    bool exportSocketData(const int, const cv::Mat,
+                          const std::vector<int>, const std::map<int, T>,
+                          QString) const;
 
 private:
     void saveFrame(const QString, const cv::Mat, const QString ) const;
@@ -43,13 +51,22 @@ private:
     void savePoseWithTimeStamp(const std::vector<int> ndiHandle, const std::map<int, T> ndiData,
                             const QString timeStamp, const QString filePath) const ;
     //
+    // ======== Socket ============
+    WSADATA wsaData;
+    SOCKET sockClient;
+    SOCKADDR_IN addrServer;
 };
+
+
+template <typename T>
+void ndiData2QString(const T data, QString &);
+
 
 template <typename T>
 void Export::exportData(const int frameIndex, const cv::Mat frame,
                         const std::vector<int> ndiHandle, const std::map<int, T> ndiData, \
                         QString timeStamp, QString savePath) const {
-    assert(ndiHandle.size() == 4);
+    //assert(ndiHandle.size() == 4);
     exportThread<T>(frameIndex, frame, ndiHandle, ndiData, timeStamp, savePath);
     boost::thread td(&Export::exportThread<T>, this, frameIndex, frame, ndiHandle, ndiData, timeStamp, savePath);
 }
@@ -67,8 +84,10 @@ void Export::exportThread(const int frameIndex, const cv::Mat frame,
     if (!frame.empty())
         saveFrame(frameIndexStr, frame, savePath);
     //
-    QString filePath = savePath + "/PoseWithTimeStamp/" + frameIndexStr + ".json";
-    savePoseWithTimeStamp<T1>(ndiHandle, ndiData, timeStamp, filePath);
+    if (!ndiHandle.empty()){
+        QString filePath = savePath + "/PoseWithTimeStamp/" + frameIndexStr + ".json";
+        savePoseWithTimeStamp<T1>(ndiHandle, ndiData, timeStamp, filePath);
+    }
 }
 
 template <typename T>
@@ -83,20 +102,28 @@ void Export::savePoseWithTimeStamp(const std::vector<int> ndiHandle, const std::
         //
         out << "\"Poses\" : \n";
             out << "\t{\n";
-            for(int i=0; i<4;i++){
-                temp.clear();
-                if(ndiHandle[i]>0){
-                    T data = ndiData.at(ndiHandle[i]);
-                    this->ndiData2QString<T>(data, temp);
+            if (ndiHandle.empty()) {
+                out << "\t\"0\": [-1],\n";
+                out << "\t\"1\": [-1],\n";
+                out << "\t\"2\": [-1],\n";
+                out << "\t\"3\": [-1]\n";
+            }
+            else{
+                for(int i=0; i<4;i++){
+                    temp.clear();
+                    if(ndiHandle[i]>0){
+                        T data = ndiData.at(ndiHandle[i]);
+                        ndiData2QString<T>(data, temp);
+                    }
+                    else{
+                        temp = "[-1]";
+                    }
+                    out << "\t\"" + QString::number(i) +"\":" + temp;
+                    if (i == 3)
+                        out << "\n";
+                    else
+                        out << ",\n";
                 }
-                else{
-                    temp = "[-1]";
-                }
-                out << "\t\"" + QString::number(i) +"\":" + temp;
-                if (i == 3)
-                    out << "\n";
-                else
-                    out << ",\n";
             }
             out << "\t}\n";
         //
@@ -105,5 +132,83 @@ void Export::savePoseWithTimeStamp(const std::vector<int> ndiHandle, const std::
     }
 }
 
+template <typename T>
+bool Export::exportSocketData(const int frameIndex, const cv::Mat frame,
+                      const std::vector<int> ndiHandle, const std::map<int, T> ndiData, \
+                      QString timeStamp) const {
+    //图像压缩
+    std::vector<uchar> data_encode;
+    cv::imencode(".jpg", frame, data_encode);
+    std::string binary_data(data_encode.begin(), data_encode.end());
+    
+    // 数据打包
+    std::string message;
+    //
+    QString temp;
+    message += "{\n";
+    message += "\"TimeStamp\": \"" + timeStamp.toStdString() + "\",\n";
+    message += "\"Poses\" : \n";
+        message += "\t{\n";
+        if (ndiHandle.empty()) {
+            message += "\t\"0\": [-1],\n";
+            message += "\t\"1\": [-1],\n";
+            message += "\t\"2\": [-1],\n";
+            message += "\t\"3\": [-1]\n";
+        }
+        else{
+            for(int i=0; i<4;i++){
+                temp.clear();
+                if(ndiHandle[i]>0){
+                        T data = ndiData.at(ndiHandle[i]);
+                        ndiData2QString<T>(data, temp);
+                }
+                else{
+                        temp = "[-1]";
+                }
+                message += "\t\"" + std::to_string(i) +"\":" + temp.toStdString();
+                if (i == 3)
+                        message += "\n";
+                else
+                        message += ",\n";
+            }
+        }
+        message += "\t}\n";
+    message += "} \n";
+    // 尺寸
+    std::string sizeJson = std::to_string(message.size());
+    int size = sizeJson.size();
+    for (int i = 0; i < 16 - size; i++) {
+            sizeJson = "0" + sizeJson;
+    }
+    std::string sizeFrame = std::to_string(binary_data.size());
+    int size2 = sizeFrame.size();
+    for (int i = 0; i < 16 - size2; i++) {
+            sizeFrame = "0" + sizeFrame;
+    }
+    message = sizeJson + sizeFrame + message + binary_data;
+
+    // 发送、确认收到
+    if (message.size() < 200*1024){
+        if (send(this->sockClient, message.c_str(), message.size(), 0) == -1) {
+            return false;
+        }
+
+        char recvBuf[35] = {};
+        if (recv(this->sockClient, recvBuf, 35, 0) == -1) {
+            return false;
+        }
+
+        std::string expectedResponse = "OK" + sizeJson + sizeFrame;
+        std::string actualResponse(recvBuf);
+        if (actualResponse.compare(expectedResponse) == 0){
+            return true;
+        }
+        else
+        {
+            return false;
+        }   
+    }
+    return true;
+}
 
 #endif // EXPORT_H

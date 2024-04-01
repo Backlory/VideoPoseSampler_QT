@@ -11,6 +11,8 @@
 
 OpenCVFrame::OpenCVFrame() {
     this->cap = nullptr;
+    this->th_sampleId = 0;
+    this->th_timeStamp = "";
     this->m_thread = std::make_shared<boost::thread>(std::bind(&OpenCVFrame::onRunning, this));
 }
 
@@ -28,17 +30,23 @@ OpenCVFrame::~OpenCVFrame()
     }
 }
 
+
 int OpenCVFrame::onRunning(){
     while(!boost::this_thread::interruption_requested()){  // 线程未被中断
         if (this->cap != nullptr){
             if (this->cap->isOpened()){
                 this->cap->read(this->frame_inflow);
+                //
+                this->th_sampleId++;
+                //this->th_timeStamp = "";
             }
         }
         boost::this_thread::interruption_point(); // 线程中断点
     }
     return 0;
 }
+
+
 
 /*
  * 关闭并重置cap为nullptr
@@ -62,6 +70,8 @@ bool OpenCVFrame::Open(const int index) {
         throw "video capture has been opened!";
     }
     this->cap = new cv::VideoCapture(index);
+    this->th_sampleId = 0;
+    this->th_timeStamp = "";
     return this->cap->isOpened();
 }
 
@@ -96,9 +106,15 @@ std::string OpenCVFrame::getInfo(){
 
 /*
  * 获取视频流的帧。加锁截取一帧，转换为RGB格式并返回
+ * 时间：read指令时刻，真正成像时刻，流中保存时刻，取得数据时刻。
+ * 在没有GPS授时的情况下，绝对时间都是不准的，这里的时间戳只是为了相对同步，因此不论是其实放哪里都行。
 */
 bool OpenCVFrame::getFrame(cv::Mat &fm){
-    std::lock_guard<std::mutex> _(m_lock);
-    this->frame_inflow.copyTo(fm);
+    {
+        double t = HSTime::wall_time(); // 取得数据时刻
+        std::lock_guard<std::mutex> _(m_lock);
+        this->frame_inflow.copyTo(fm);
+        this->timeStamp_inflow = t; //
+    }
     return true;
 }

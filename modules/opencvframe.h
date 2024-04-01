@@ -5,6 +5,7 @@
 #include <assert.h>
 #include "opencv2/opencv.hpp"
 #include <boost/thread.hpp>
+#include "highresolutiontime.h""
 
 class OpenCVFrame {
 public:
@@ -29,10 +30,14 @@ private:
     cv::VideoCapture* cap;
     bool _Reset();
     cv::Mat frame_inflow;
+    double timeStamp_inflow; // 时间戳
 
     int onRunning();
     std::shared_ptr<boost::thread> m_thread;
     mutable std::mutex m_lock;
+    long int th_sampleId;
+    std::string th_timeStamp;
+
 };
 
 #endif // OPENCVFRAME_H

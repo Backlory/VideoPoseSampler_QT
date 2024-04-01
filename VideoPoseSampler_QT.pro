@@ -17,11 +17,11 @@ INCLUDEPATH += \
 
 CONFIG(debug, debug|release) {
     LIBS += \
-        ../3rdparty/OpenCV/x64/vc15/lib/*d.lib \
+        ../3rdparty/OpenCV/x64/vc15/lib/opencv_world450d.lib \
         ../3rdparty/Boost/lib/*-mt-gd-x64-1_74.lib
 }else{
     LIBS += \
-        ../3rdparty/OpenCV/x64/vc15/lib/*.lib \
+        ../3rdparty/OpenCV/x64/vc15/lib/opencv_world450.lib \
         ../3rdparty/Boost/lib/*-mt-x64-1_74.lib
 }
 
@@ -42,6 +42,7 @@ SOURCES += \
     modules/comportdetection.cpp \
     modules/delaycalibration.cpp \
     modules/export.cpp \
+    modules/highresolutiontime.cpp \
     modules/ndimodule.cpp \
     modules/opencvframe.cpp \
     modules/timestamp.cpp
@@ -59,6 +60,7 @@ HEADERS += \
     modules/comportdetection.h \
     modules/delaycalibration.h \
     modules/export.h \
+    modules/highresolutiontime.h \
     modules/ndimodule.h \
     modules/opencvframe.h \
     modules/timestamp.h

@@ -36,6 +36,8 @@ MainWindow::MainWindow(QWidget *parent)
 
     connect(ui->Export_PbRunPause, &QPushButton::clicked, this, &MainWindow::onExport_PbRunPauseClick);
     connect(ui->Export_Pb, &QPushButton::clicked, this, &MainWindow::onExport_PbClick);
+    connect(ui->Export_PbSocket, &QPushButton::clicked, this, &MainWindow::onExport_PbSocketClick);
+
 
     connect(ui->NDI_Cb0, &QPushButton::clicked, this, &MainWindow::onNDI_Cb0Click);
     connect(ui->NDI_Cb1, &QPushButton::clicked, this, &MainWindow::onNDI_Cb1Click);
@@ -172,19 +174,27 @@ void MainWindow::updatePose(const std::map<int, data_ptr6> poseMap){
 void MainWindow::onTime(){
     // 时间戳更新
     ui->TimeS_Label->setText("当前时间戳: \t"+this->TimeStampImpl->getTimeStamp());
-    // 更新画面
+
+    // 同步触发
     if (this->opcvFrmImpl->isOpened()) {
         this->opcvFrmImpl->getFrame(this->cvframe);
-        this->updateFrame(this->cvframe);
-        auto details = QString::fromStdString(opcvFrmImpl->getInfo());
-        details += "导出序号：" +  QString::number(this->exptIdx) + "\n";
-        details += "导出位置：" + this->exptFolderPath + "\n";
-        ui->OpcvF_LableDetail->setText(details);
     }
-    // 更新位姿
     if (this->ndiImpl->isOpened()){
         this->ndiData7.clear();
-        this->ndiImpl->getPosition(this->ndiData7); //尺寸未知
+        this->ndiImpl->getPosition(this->ndiData7, this->DelayClibImpl->getFrameDelayMs()); //尺寸未知
+    }
+
+    QString details;
+    details += "导出序号：" +  QString::number(this->exptIdx) + "\n";
+    details += "导出位置：" + this->exptFolderPath + "\n";
+    // 更新画面
+    if (this->opcvFrmImpl->isOpened()) {
+        this->updateFrame(this->cvframe);
+        details += QString::fromStdString(opcvFrmImpl->getInfo());
+    }
+
+    // 更新位姿
+    if (this->ndiImpl->isOpened()){
         switch(this->ndiOutputType){
         case 4:
             this->exptImpl->d7to4(ndiData7, ndiData4);
@@ -198,14 +208,17 @@ void MainWindow::onTime(){
             this->updatePose(this->ndiData7);
             break;
         }
+        details += "电磁定位输出类型：" + QString::number(this->ndiOutputType) + "\n";
     }
+
     // 数据导出
-    if (this->onExporting){
+    if (this->onExportingLocal || this->onExportingSocket) {
+
         this->ui->NDI_LableType0->setText("导出类型："+QString::number(this->ndiOutputType));
         this->ui->NDI_LableType1->setText("导出类型："+QString::number(this->ndiOutputType));
         this->ui->NDI_LableType2->setText("导出类型："+QString::number(this->ndiOutputType));
         this->ui->NDI_LableType3->setText("导出类型："+QString::number(this->ndiOutputType));
-        if (this->ndiImpl->isOpened() ){
+        if (this->onExportingLocal){
             switch(this->ndiOutputType){
             case 4:
                 this->exptImpl->exportData<data_ptr4>(exptIdx, cvframe,
@@ -223,16 +236,20 @@ void MainWindow::onTime(){
                                                       TimeStampImpl->getTimeStamp(), exptFolderPath);
                 break;
             }
-            this->exptIdx ++;
         }
+        if (this->onExportingSocket){
+            this->exptImpl->exportSocketData(exptIdx, cvframe,
+                                                ndiHandle, ndiData7,
+                                                TimeStampImpl->getTimeStamp());
+        }
+        details += "正在本地导出:" + QString(this->onExportingLocal?"true":"false") + "\n";
+        details += "正在端口导出:" + QString(this->onExportingSocket?"true":"false") + "\n";
     }
+    this->exptIdx++;
+    ui->OpcvF_LableDetail->setText(details);
 }
 void MainWindow::onDelyaC_PbClick() {
     this->DelayClibImpl->doDelayCalib();
-    int frameDelayMs = this->DelayClibImpl->getFrameDelayMs();
-    this->ui->OpcvF_LableDetail->setText(
-        "延迟："+QString::number(frameDelayMs)+" ms"
-        );
 }
 
 // ====== 01 camera 相关交互 ======
@@ -289,7 +306,7 @@ void MainWindow::onExport_PbRunPauseClick(){
         this->onRunning = false;
         this->timer->stop();
         this->ui->Export_PbRunPause->setText("启动");
-        this->onExporting = false;
+        this->onExportingLocal = false;
         this->ui->Export_Pb->setText("开始采集（到本地）");
         this->ui->Export_Pb->setEnabled(false);
     }
@@ -303,8 +320,8 @@ void MainWindow::onExport_PbRunPauseClick(){
 
 void MainWindow::onExport_PbClick() {
     if (this->onRunning){
-        if (this->onExporting == true) {
-            this->onExporting = false;
+        if (this->onExportingLocal == true) {
+            this->onExportingLocal = false;
             this->ui->Export_Pb->setText("开始采集（到本地）");
             this->ndiOutputType = -1;
         }
@@ -314,12 +331,52 @@ void MainWindow::onExport_PbClick() {
                                                  7, 0, 7, 1, &bOK);
             if (bOK && (temp == 4||temp == 6|| temp == 7)){
                 this->ndiOutputType = temp;
-                this->onExporting = true;
+                this->onExportingLocal = true;
                 this->ui->Export_Pb->setText("停止本地采集");
                 //
-                this->exptIdx = 0;
+                if(!this->onExportingSocket){  //确保都关闭才重置
+                    this->exptIdx = 0;
+                }
                 this->exptFolderPath = "SampleOutput/" + this->TimeStampImpl->getTimeStamp();
                 this->exptImpl->createFolder(exptFolderPath);
+            }
+        }
+    }
+}
+void MainWindow::onExport_PbSocketClick() {
+    if (this->onRunning){
+        if (this->onExportingSocket == true) {
+            this->onExportingSocket = false;
+            this->ui->Export_PbSocket->setText("开始采集（到端口）");
+            this->ndiOutputType = -1;
+
+            this->exptImpl->SocketClose();
+        }
+        else{
+            bool bOK = false;
+            int temp = QInputDialog::getInt(this, "导出类型", "4-四阶位姿矩阵\n6-欧拉角\n7-四元数",
+                                                 7, 0, 7, 1, &bOK);
+            if (bOK && (temp == 4||temp == 6|| temp == 7)){
+                QString address = QInputDialog::getText(this, "地址", "请输入地址和端口（IP:Port）",
+                    QLineEdit::Normal, "127.0.0.1:8998", &bOK);
+                if (bOK)
+                {
+                    //
+                    std::string ip = address.split(":").at(0).toStdString();
+                    int port = address.split(":").at(1).toInt();
+                    if(this->exptImpl->SocketInit(ip, port)){
+                        this->ndiOutputType = temp;
+                        this->onExportingSocket = true;
+                        this->ui->Export_PbSocket->setText("停止端口采集");
+                        //
+                        if(!this->onExportingLocal){  //确保都关闭才重置
+                            this->exptIdx = 0;
+                        }
+                    }
+                    else{
+                        QMessageBox::warning(this, "错误", "无法连接到服务器"+address);
+                    }
+                }
             }
         }
     }

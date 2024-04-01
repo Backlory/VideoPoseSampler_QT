@@ -161,7 +161,8 @@ std::vector<int> NDIModule::getHandlers() const {
  * NDIModule::getPosition(p);
  * auto out1 = p[h[0]];
  */
-bool NDIModule::getPosition(std::map<int, data_ptr7> &positions) const {
+bool NDIModule::getPosition(std::map<int, data_ptr7> &positions, const int frameDelayMs) const {
+    //等待DelayClibImpl毫秒，确保同步 TODO
     {
         std::lock_guard<std::mutex> _(this->m_lock);
         positions = this->m_data;

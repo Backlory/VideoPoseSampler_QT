@@ -2,7 +2,7 @@
  * @Author: backlory's desktop dbdx_liyaning@126.com
  * @Date: 2024-03-16 13:24:52
  * @LastEditors: backlory's desktop dbdx_liyaning@126.com
- * @LastEditTime: 2024-03-16 18:36:29
+ * @LastEditTime: 2024-03-27 21:13:54
  * @Description: 
  * Copyright (c) 2024 by Backlory, (email: dbdx_liyaning@126.com), All Rights Reserved.
  */
@@ -31,7 +31,7 @@ using data_ptr7 = std::shared_ptr<QuatTransformationStruct>;
 //将Eigen::Matrix4d转换为QString
 //[[a11, a12, a13, a14]\n, [a21, a22, a23, a24]\n, [a31, a32, a33, a34]\n, [a41, a42, a43, a44]]\n
 template<>
-void Export::ndiData2QString<data_ptr4>(data_ptr4 mat, QString & str) const{
+void ndiData2QString<data_ptr4>(data_ptr4 mat, QString & str){
     auto i2s = [&mat](int i, int j){return QString::number((*mat)(i,j));};
     if(mat){
         str += "[[" + i2s(0,0) + ", " + i2s(0,1) + ", " + i2s(0,2) + ", " + i2s(0,3) + "],\n";
@@ -42,7 +42,7 @@ void Export::ndiData2QString<data_ptr4>(data_ptr4 mat, QString & str) const{
 }
 //将Sophus::Vector6d转换为QString
 template<>
-void Export::ndiData2QString<data_ptr6>(data_ptr6 mat, QString & str) const{
+void ndiData2QString<data_ptr6>(data_ptr6 mat, QString & str){
     auto i2s = [&mat](int i){return QString::number((*mat)(i));};
     if(mat){
         str += "[" + i2s(0) + ", " + i2s(1) + ", " + i2s(2) + ", " + i2s(3) + ", " + i2s(4) + ", " + i2s(5) + "]";
@@ -51,7 +51,7 @@ void Export::ndiData2QString<data_ptr6>(data_ptr6 mat, QString & str) const{
 
 //将QuatTransformationStruct转换为QString
 template<>
-void Export::ndiData2QString<data_ptr7>(data_ptr7 mat, QString & str) const{
+void ndiData2QString<data_ptr7>(data_ptr7 mat, QString & str){
     auto d2s = [](double d){return QString::number(d);};
     if(mat){
         str = "[" + d2s(mat->translation.x) + ", " + d2s(mat->translation.y) + ", " + d2s(mat->translation.z) +
@@ -123,4 +123,46 @@ void Export::d7to6(const std::map<int, data_ptr7> &d7, std::map<int, data_ptr6> 
             d6.emplace(id, nullptr);
         }
     }
+}
+
+/* ==================socket============*/
+bool Export::SocketInit(std::string adddress , int port){
+    WSAStartup(MAKEWORD(2, 2), &this->wsaData);
+
+    /*-------------------------------创建socket-----------------------------------*/
+    memset(&this->addrServer, 0, sizeof(this->addrServer));  //每个字节都用0填充
+    this->sockClient = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP); // SOCK_STREAM为TCP流式套接字，SOCK_DGRAM为UDP数据报套接字
+    this->addrServer.sin_addr.S_un.S_addr = inet_addr(adddress.c_str());
+    this->addrServer.sin_family = AF_INET;
+    this->addrServer.sin_port = htons(port);
+    //缓冲区大小
+    int nRecvBuf = 200 * 1024; //设置为200K
+    setsockopt(this->sockClient, SOL_SOCKET, SO_RCVBUF, (const char*)&nRecvBuf, sizeof(int));
+    //连接
+    connect(this->sockClient, (SOCKADDR*)&this->addrServer, sizeof(SOCKADDR));
+
+    // 测试是否连接成功
+    std::string sendMsg = "hello";
+    if (send(this->sockClient, sendMsg.c_str(), sendMsg.size() + 1, 0) == -1) {
+        return false;
+    }
+
+    char recvBuf[6];
+    if (recv(this->sockClient, recvBuf, sizeof(recvBuf), 0) == -1) {
+        return false;
+    }
+
+    std::string recvMsg(recvBuf);
+    if (recvMsg.compare("hello") == 0) {
+        return true;
+    } else {
+        return false;
+    }
+}
+
+
+bool Export::SocketClose(){
+    closesocket(this->sockClient);
+    WSACleanup();
+    return true;
 }

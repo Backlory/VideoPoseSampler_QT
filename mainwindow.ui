@@ -558,7 +558,7 @@
          </widget>
         </item>
         <item>
-         <widget class="QPushButton" name="Export_Pb_HTTP">
+         <widget class="QPushButton" name="Export_PbSocket">
           <property name="sizePolicy">
            <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
             <horstretch>0</horstretch>
@@ -572,7 +572,7 @@
            </size>
           </property>
           <property name="text">
-           <string>开始采集（到HTTP端口）</string>
+           <string>开始采集（到端口）</string>
           </property>
          </widget>
         </item>

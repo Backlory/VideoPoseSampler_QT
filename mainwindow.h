@@ -54,7 +54,8 @@ private:
     OpenCVFrame * opcvFrmImpl;
     NDIModule * ndiImpl;
     bool onRunning = false;
-    bool onExporting = false;
+    bool onExportingLocal = false;
+    bool onExportingSocket = false;
     cv::Mat cvframe;
     cv::Mat cvframeDisp;
     std::vector<int> ndiHandle;  //idx->port name, size == 4
@@ -89,6 +90,7 @@ public slots:
     void onComD_PbResetClick();
     void onExport_PbRunPauseClick();
     void onExport_PbClick();
+    void onExport_PbSocketClick();
     void onNDI_Cb0Click();  // 复选框
     void onNDI_Cb1Click();
     void onNDI_Cb2Click();
