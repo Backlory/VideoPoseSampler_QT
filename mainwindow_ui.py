@@ -396,4 +396,4 @@ class Ui_MainWindow(object):
         self.TimeS_Label.setText(_translate("MainWindow", "时间戳："))
         self.Export_PbRunPause.setText(_translate("MainWindow", "启动"))
         self.Export_Pb.setText(_translate("MainWindow", "开始采集（到本地）"))
-        self.Export_PbSocket.setText(_translate("MainWindow", "开始采集（到端口）"))
+        self.Export_PbSocket.setText(_translate("MainWindow", "启动采集服务器"))

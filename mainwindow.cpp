@@ -3,7 +3,7 @@
 
 
 
-MainWindow::MainWindow(QWidget *parent)
+MainWindow::MainWindow(QWidget *parent, QString address, int port)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
 {
@@ -22,9 +22,13 @@ MainWindow::MainWindow(QWidget *parent)
     DelayClibImpl = new DelayCalibration(this);
     TimeStampImpl = new TimeStamp();
     exptImpl = new Export();
-
+    
     opcvFrmImpl = &OpenCVFrame::GetInstance();
     ndiImpl = &NDIModule::GetInstance();
+
+    // socket
+    this->sock_address = address.isEmpty()?"127.0.0.1" : address;
+    this->sock_port = port == 0? 8998 : port;
 
     // connect
     connect(timer, &QTimer::timeout, this, &MainWindow::onTime);
@@ -238,13 +242,24 @@ void MainWindow::onTime(){
             }
         }
         if (this->onExportingSocket){
-            this->exptImpl->exportSocketData(exptIdx, cvframe,
-                                                ndiHandle, ndiData7,
-                                                TimeStampImpl->getTimeStamp());
+            auto m = this->exptImpl->exportSocketData(exptIdx, cvframe,
+                                                      ndiHandle, ndiData7,
+                                                      TimeStampImpl->getTimeStamp());
+            if(m > 0) {
+                QMessageBox::warning(this, "错误", "客户端连接中断，错误代码="+QString::number(m));
+                this->ui->Export_PbSocket->click();
+                // 1-连接断开
+                // 2-获取get失败
+                // 3-发送
+            }
+
         }
         details += "正在本地导出:" + QString(this->onExportingLocal?"true":"false") + "\n";
         details += "正在端口导出:" + QString(this->onExportingSocket?"true":"false") + "\n";
     }
+    
+    //std::vector<double> fpsList;
+    details += "FPS:" + this->TimeStampImpl->getFPS();
     this->exptIdx++;
     ui->OpcvF_LableDetail->setText(details);
 }
@@ -312,7 +327,7 @@ void MainWindow::onExport_PbRunPauseClick(){
     }
     else{
         this->onRunning = true;
-        this->timer->start(1000/30); //FPS
+        this->timer->start(10); //FPS
         this->ui->Export_PbRunPause->setText("暂停");
         this->ui->Export_Pb->setEnabled(true);
     }
@@ -323,7 +338,7 @@ void MainWindow::onExport_PbClick() {
         if (this->onExportingLocal == true) {
             this->onExportingLocal = false;
             this->ui->Export_Pb->setText("开始采集（到本地）");
-            this->ndiOutputType = -1;
+            //this->ndiOutputType = -1;
         }
         else{
             bool bOK = false;
@@ -347,8 +362,8 @@ void MainWindow::onExport_PbSocketClick() {
     if (this->onRunning){
         if (this->onExportingSocket == true) {
             this->onExportingSocket = false;
-            this->ui->Export_PbSocket->setText("开始采集（到端口）");
-            this->ndiOutputType = -1;
+            this->ui->Export_PbSocket->setText("启动采集服务器");
+            //this->ndiOutputType = -1;
 
             this->exptImpl->SocketClose();
         }
@@ -357,24 +372,28 @@ void MainWindow::onExport_PbSocketClick() {
             int temp = QInputDialog::getInt(this, "导出类型", "4-四阶位姿矩阵\n6-欧拉角\n7-四元数",
                                                  7, 0, 7, 1, &bOK);
             if (bOK && (temp == 4||temp == 6|| temp == 7)){
-                QString address = QInputDialog::getText(this, "地址", "请输入地址和端口（IP:Port）",
-                    QLineEdit::Normal, "127.0.0.1:8998", &bOK);
+                QString address = QInputDialog::getText(this, "地址", "请输入服务器开放的地址和端口（IP:Port）",
+                    QLineEdit::Normal, this->sock_address + ":" + QString::number(this->sock_port), &bOK);
                 if (bOK)
                 {
                     //
                     std::string ip = address.split(":").at(0).toStdString();
                     int port = address.split(":").at(1).toInt();
+                    this->ui->Export_PbSocket->setText("建立服务器...");
+                    QApplication::processEvents();
                     if(this->exptImpl->SocketInit(ip, port)){
                         this->ndiOutputType = temp;
                         this->onExportingSocket = true;
-                        this->ui->Export_PbSocket->setText("停止端口采集");
+                        this->ui->Export_PbSocket->setText("关闭采集服务器");
                         //
                         if(!this->onExportingLocal){  //确保都关闭才重置
                             this->exptIdx = 0;
                         }
                     }
                     else{
-                        QMessageBox::warning(this, "错误", "无法连接到服务器"+address);
+                        this->ui->Export_PbSocket->setText("启动采集服务器");
+                        QMessageBox::warning(this, "错误", "无法启动服务器"+address);
+                        this->exptImpl->SocketClose();
                     }
                 }
             }

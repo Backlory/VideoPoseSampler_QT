@@ -36,7 +36,7 @@ public:
     bool SocketInit(std::string adddress = "127.0.0.1", int port = 2345);
     bool SocketClose();
     template <typename T>
-    bool exportSocketData(const int, const cv::Mat,
+    int exportSocketData(const int, const cv::Mat,
                           const std::vector<int>, const std::map<int, T>,
                           QString) const;
 
@@ -53,8 +53,11 @@ private:
     //
     // ======== Socket ============
     WSADATA wsaData;
+    SOCKET sockServer;
     SOCKET sockClient;
     SOCKADDR_IN addrServer;
+    //服务器
+    
 };
 
 
@@ -133,14 +136,24 @@ void Export::savePoseWithTimeStamp(const std::vector<int> ndiHandle, const std::
 }
 
 template <typename T>
-bool Export::exportSocketData(const int frameIndex, const cv::Mat frame,
+int Export::exportSocketData(const int frameIndex, const cv::Mat frame,
                       const std::vector<int> ndiHandle, const std::map<int, T> ndiData, \
                       QString timeStamp) const {
+    // 检查是否连接中
+    if (this->sockClient == INVALID_SOCKET) {
+        return false;
+    }
     //图像压缩
     std::vector<uchar> data_encode;
-    cv::imencode(".jpg", frame, data_encode);
-    std::string binary_data(data_encode.begin(), data_encode.end());
-    
+    std::string binary_data;
+    if(!frame.empty()) {
+        cv::imencode(".jpg", frame, data_encode);
+        binary_data = std::string(data_encode.begin(), data_encode.end());
+    }
+    else {
+        binary_data = "abcdef";
+    }
+
     // 数据打包
     std::string message;
     //
@@ -189,26 +202,33 @@ bool Export::exportSocketData(const int frameIndex, const cv::Mat frame,
 
     // 发送、确认收到
     if (message.size() < 200*1024){
+        // 先准备接受
+        char recvBuf[10] = {};
+            if (recv(this->sockClient, recvBuf, 10, 0) == -1) {
+            return 1;
+        }
+        std::string recvMsg(recvBuf);
+        if (recvMsg.compare("get") != 0) {
+            return 2;
+        }
+
+        // 发送
         if (send(this->sockClient, message.c_str(), message.size(), 0) == -1) {
-            return false;
+            return 3;
         }
-
-        char recvBuf[35] = {};
-        if (recv(this->sockClient, recvBuf, 35, 0) == -1) {
-            return false;
-        }
-
-        std::string expectedResponse = "OK" + sizeJson + sizeFrame;
-        std::string actualResponse(recvBuf);
-        if (actualResponse.compare(expectedResponse) == 0){
-            return true;
-        }
-        else
-        {
-            return false;
-        }   
+//        // 再接受
+//        char recvBuf2[35] = {};
+//        if (recv(this->sockClient, recvBuf2, 35, 0) == -1) {
+//            return 4;
+//        }
+//        std::string expectedResponse = "OK" + sizeJson + sizeFrame;
+//        std::string actualResponse(recvBuf2);
+//        if (actualResponse.compare(expectedResponse) != 0) {
+//            return 5;
+//        }
+        return -1;
     }
-    return true;
+    return -1;
 }
 
 #endif // EXPORT_H

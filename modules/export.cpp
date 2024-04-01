@@ -2,7 +2,7 @@
  * @Author: backlory's desktop dbdx_liyaning@126.com
  * @Date: 2024-03-16 13:24:52
  * @LastEditors: backlory's desktop dbdx_liyaning@126.com
- * @LastEditTime: 2024-03-27 21:13:54
+ * @LastEditTime: 2024-04-01 18:47:54
  * @Description: 
  * Copyright (c) 2024 by Backlory, (email: dbdx_liyaning@126.com), All Rights Reserved.
  */
@@ -128,20 +128,68 @@ void Export::d7to6(const std::map<int, data_ptr7> &d7, std::map<int, data_ptr6> 
 /* ==================socket============*/
 bool Export::SocketInit(std::string adddress , int port){
     WSAStartup(MAKEWORD(2, 2), &this->wsaData);
+    /*------------创建服务器---------------*/
+    this->sockServer = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+    this->addrServer.sin_family = AF_INET;
+    this->addrServer.sin_port = htons(port);
+    this->addrServer.sin_addr.S_un.S_addr = inet_addr(adddress.c_str());
+    bind(this->sockServer, (SOCKADDR*)&this->addrServer, sizeof(SOCKADDR));
+    
+    int nRecvBuf = 1024; //设置为1K
+    setsockopt(this->sockServer, SOL_SOCKET, SO_RCVBUF, (const char*)&nRecvBuf, sizeof(int));
+    int nSendBuf = 200 * 1024; //设置为200K
+    setsockopt(this->sockServer, SOL_SOCKET, SO_SNDBUF, (const char*)&nSendBuf, sizeof(int));
+    //int nNetTimeout = 5;
+    //setsockopt(this->sockServer, SOL_SOCKET, SO_RCVTIMEO, (char *)&nNetTimeout, sizeof(int));
 
+    listen(this->sockServer, 2); //监听连接请求
+    try {
+        this->sockClient = accept(this->sockServer, NULL, NULL); //接受连接请求
+    }
+    catch(const std::exception& e)
+    {
+        std::cerr << e.what() << '\n';
+            //关闭socket
+            closesocket(this->sockServer);
+            WSACleanup();
+    }
+    
+
+
+
+    char recvBuf[100];
+    if (recv(this->sockClient, recvBuf, sizeof(recvBuf), 0) == -1) {
+        return false;
+    }
+    std::string recvMsg(recvBuf);
+    if (recvMsg.compare("hellofromclient") != 0) {
+        return false;
+    }
+    std::string sendMsg = "hellofromserver";
+    if (send(this->sockClient, sendMsg.c_str(), sendMsg.size() + 1, 0) == -1) {
+        return false;
+    }
+    return true;
+    
     /*-------------------------------创建socket-----------------------------------*/
+    /*
     memset(&this->addrServer, 0, sizeof(this->addrServer));  //每个字节都用0填充
     this->sockClient = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP); // SOCK_STREAM为TCP流式套接字，SOCK_DGRAM为UDP数据报套接字
     this->addrServer.sin_addr.S_un.S_addr = inet_addr(adddress.c_str());
     this->addrServer.sin_family = AF_INET;
     this->addrServer.sin_port = htons(port);
-    //缓冲区大小
-    int nRecvBuf = 200 * 1024; //设置为200K
+    int nRecvBuf = 1024; //设置为1K
     setsockopt(this->sockClient, SOL_SOCKET, SO_RCVBUF, (const char*)&nRecvBuf, sizeof(int));
-    //连接
+    int nSendBuf = 200 * 1024; //设置为200K
+    setsockopt(this->sockClient, SOL_SOCKET, SO_SNDBUF, (const char*)&nSendBuf, sizeof(int));
     connect(this->sockClient, (SOCKADDR*)&this->addrServer, sizeof(SOCKADDR));
-
+    */
+   
+    //缓冲区大小
+    //连接
+    
     // 测试是否连接成功
+    /*
     std::string sendMsg = "hello";
     if (send(this->sockClient, sendMsg.c_str(), sendMsg.size() + 1, 0) == -1) {
         return false;
@@ -157,12 +205,13 @@ bool Export::SocketInit(std::string adddress , int port){
         return true;
     } else {
         return false;
-    }
+    }*/
 }
 
 
 bool Export::SocketClose(){
     closesocket(this->sockClient);
+    closesocket(this->sockServer);
     WSACleanup();
     return true;
 }

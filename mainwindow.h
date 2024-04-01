@@ -36,7 +36,7 @@ class MainWindow : public QMainWindow
     Q_OBJECT
 
 public:
-    MainWindow(QWidget *parent = nullptr);
+    MainWindow(QWidget *parent = nullptr, QString address = "", int port = 0);
     ~MainWindow();
 
 private:
@@ -76,7 +76,10 @@ private:
     std::map<int, std::shared_ptr<Eigen::Matrix4d>> ndiOut4;
     //数据导出
     Export * exptImpl;
+    QString sock_address;
+    int sock_port;
     int exptIdx = 0;
+    std::vector<double> fpsList;
     QString exptFolderPath;
 
 

@@ -572,7 +572,7 @@
            </size>
           </property>
           <property name="text">
-           <string>开始采集（到端口）</string>
+           <string>启动采集服务器</string>
           </property>
          </widget>
         </item>

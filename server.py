@@ -2,7 +2,7 @@
 Author: backlory's desktop dbdx_liyaning@126.com
 Date: 2024-03-22 15:21:54
 LastEditors: backlory's desktop dbdx_liyaning@126.com
-LastEditTime: 2024-03-27 22:33:40
+LastEditTime: 2024-03-28 09:52:33
 Description: 
 
 基于socket的图像传输服务端。
@@ -34,28 +34,33 @@ while 1:
     # 接收数据，最大接收长度为200KB
     realLength = 200*1024
     stringData = conn.recv(realLength)
+    print("idx: ", idx, "len: ", len(stringData))
     if not stringData:
         break
-    temp = 'OK'+stringData[:32].decode() + "\0"
-    conn.send(temp.encode())
+    try:
+        temp = 'OK'+stringData[:32].decode() + "\0"
+        conn.send(temp.encode())
+    except:
+        conn.send("ERROR".encode())
     
     # 解析数据
-    sizeJson = int(stringData[:16])
-    sizeFrame = int(stringData[16:32])
-    dataJson = stringData[32:32+sizeJson]
-    dataFrame = stringData[32+sizeJson:32+sizeJson+sizeFrame]
-    # pose
-    dataJson = json.loads(dataJson)
-    # frame
-    dataFrame = np.frombuffer(dataFrame, dtype='uint8')
-    decimg=cv2.imdecode(dataFrame, cv2.IMREAD_COLOR)
-    
-    # 显示
-    cv2.imshow('SERVER',decimg)
-    if cv2.waitKey(1) == 27:
-        break 
-    idx += 1
-    print('idx:', idx)
+    try:
+        sizeJson = int(stringData[:16])
+        sizeFrame = int(stringData[16:32])
+        dataJson = stringData[32:32+sizeJson]
+        dataFrame = stringData[32+sizeJson:32+sizeJson+sizeFrame] 
+        dataJson = json.loads(dataJson)
+        dataFrame = np.frombuffer(dataFrame, dtype='uint8')
+        
+        # 显示
+        if len(dataFrame) > 100:
+            decimg=cv2.imdecode(dataFrame, cv2.IMREAD_COLOR)
+            cv2.imshow('SERVER',decimg)
+            if cv2.waitKey(1) == 27:
+                break 
+        idx += 1
+    except:
+        print("error, idx: ", idx)
 
 s.close()
 cv2.destroyAllWindows()
