@@ -109,12 +109,27 @@ std::string OpenCVFrame::getInfo(){
  * 时间：read指令时刻，真正成像时刻，流中保存时刻，取得数据时刻。
  * 在没有GPS授时的情况下，绝对时间都是不准的，这里的时间戳只是为了相对同步，因此不论是其实放哪里都行。
 */
-bool OpenCVFrame::getFrame(cv::Mat &fm){
+bool OpenCVFrame::getFrame(cv::Mat &fm, cv::Rect &clip_roi){
     {
         double t = HSTime::wall_time(); // 取得数据时刻
         std::lock_guard<std::mutex> _(m_lock);
         this->frame_inflow.copyTo(fm);
         this->timeStamp_inflow = t; //
     }
-    return true;
+    if (clip_roi.width <= 0)
+        return true;
+    else{
+        this->clipROI = clip_roi;
+        cv::Size fmSize = fm.size();
+        if (clip_roi.x < 0 || clip_roi.y < 0 ||
+            clip_roi.x + clip_roi.width > fmSize.width || clip_roi.y + clip_roi.height > fmSize.height) {
+            // 如果 clip_roi 超出了边界，调整它的位置
+            clip_roi.x = std::max(clip_roi.x, 0);
+            clip_roi.y = std::max(clip_roi.y, 0);
+            clip_roi.width = std::min(clip_roi.width, fmSize.width - clip_roi.x);
+            clip_roi.height = std::min(clip_roi.height, fmSize.height - clip_roi.y);
+        }
+        fm = fm(clip_roi);
+        return true;
+    }
 }

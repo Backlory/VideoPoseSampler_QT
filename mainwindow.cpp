@@ -3,7 +3,7 @@
 
 
 
-MainWindow::MainWindow(QWidget *parent, QString address, int port)
+MainWindow::MainWindow(QWidget *parent, QString address, int port, int delay, QString saveDir, QStringList roiValues)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
 {
@@ -20,8 +20,10 @@ MainWindow::MainWindow(QWidget *parent, QString address, int port)
     modelCom = new QStandardItemModel(this);
 
     DelayClibImpl = new DelayCalibration(this);
+    DelayClibImpl->setFrameDelayMs(delay);
     TimeStampImpl = new TimeStamp();
     exptImpl = new Export();
+    exptPath = saveDir;
     
     opcvFrmImpl = &OpenCVFrame::GetInstance();
     ndiImpl = &NDIModule::GetInstance();
@@ -29,6 +31,27 @@ MainWindow::MainWindow(QWidget *parent, QString address, int port)
     // socket
     this->sock_address = address.isEmpty()?"127.0.0.1" : address;
     this->sock_port = port == 0? 8998 : port;
+    // ROI
+    if(roiValues.length() == 0){
+        this->clipROI.x = 0;
+        this->clipROI.y = 0;
+        this->clipROI.width = 0;
+        this->clipROI.height = 0;
+    }
+    else{
+        try {
+            auto roiValuesList = roiValues.at(0).split(",");
+            this->clipROI.x = roiValuesList.at(0).toInt();
+            this->clipROI.y = roiValuesList.at(1).toInt();
+            this->clipROI.height = roiValuesList.at(2).toInt();
+            this->clipROI.width = roiValuesList.at(3).toInt();
+        } catch (...) {
+            this->clipROI.x = 0;
+            this->clipROI.y = 0;
+            this->clipROI.width = 0;
+            this->clipROI.height = 0;
+        }
+    }
 
     // connect
     connect(timer, &QTimer::timeout, this, &MainWindow::onTime);
@@ -68,9 +91,8 @@ MainWindow::~MainWindow()
     * @param frame: 画面帧
 */
 void MainWindow::updateFrame(const cv::Mat & frame){
-
     cv::cvtColor(frame, cvframeDisp, cv::COLOR_BGR2RGB);
-    QImage img = QImage((const unsigned char*)(cvframeDisp.data), cvframeDisp.cols, cvframeDisp.rows, QImage::Format_RGB888);
+    QImage img = QImage((const unsigned char*)(cvframeDisp.data), cvframeDisp.cols, cvframeDisp.rows, cvframeDisp.cols*3 , QImage::Format_RGB888);
     QPixmap img2 = QPixmap::fromImage(img).scaled(ui->OpcvF_LableFrame->size(), Qt::KeepAspectRatio,Qt::SmoothTransformation);
     ui->OpcvF_LableFrame->setPixmap(img2);
     QApplication::processEvents();
@@ -181,7 +203,7 @@ void MainWindow::onTime(){
 
     // 同步触发
     if (this->opcvFrmImpl->isOpened()) {
-        this->opcvFrmImpl->getFrame(this->cvframe);
+        this->opcvFrmImpl->getFrame(this->cvframe, this->clipROI);
     }
     if (this->ndiImpl->isOpened()){
         this->ndiData7.clear();
@@ -257,7 +279,12 @@ void MainWindow::onTime(){
         details += "正在本地导出:" + QString(this->onExportingLocal?"true":"false") + "\n";
         details += "正在端口导出:" + QString(this->onExportingSocket?"true":"false") + "\n";
     }
-    
+    // ROI
+    details += "clipROI:["+
+               QString::number(this->clipROI.x)+","+ \
+                QString::number(this->clipROI.y)+","+ \
+                QString::number(this->clipROI.width)+","+ \
+               QString::number(this->clipROI.height)+"]\n";
     //std::vector<double> fpsList;
     details += "FPS:" + this->TimeStampImpl->getFPS();
     this->exptIdx++;
@@ -309,7 +336,7 @@ void MainWindow::onCamD_PbConnectClick(){
 
     if (this->onRunning == false){
         this->onRunning = true;
-        this->timer->start(10);
+        this->timer->start(25); // Max FPS = 40
         this->ui->Export_PbRunPause->setText("暂停");
     }
 }
@@ -327,7 +354,7 @@ void MainWindow::onExport_PbRunPauseClick(){
     }
     else{
         this->onRunning = true;
-        this->timer->start(10); //FPS
+        this->timer->start(25); // Max FPS = 40
         this->ui->Export_PbRunPause->setText("暂停");
         this->ui->Export_Pb->setEnabled(true);
     }
@@ -352,8 +379,12 @@ void MainWindow::onExport_PbClick() {
                 if(!this->onExportingSocket){  //确保都关闭才重置
                     this->exptIdx = 0;
                 }
-                this->exptFolderPath = "SampleOutput/" + this->TimeStampImpl->getTimeStamp();
-                this->exptImpl->createFolder(exptFolderPath);
+                if (this->exptPath == "")
+                    this->exptFolderPath = "SampleOutput/" + this->TimeStampImpl->getTimeStamp();
+                else{
+                    this->exptFolderPath = this->exptPath;
+                    this->exptImpl->createFolder(exptFolderPath);
+                }
             }
         }
     }

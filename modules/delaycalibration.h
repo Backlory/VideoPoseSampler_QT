@@ -10,6 +10,7 @@ public:
     //
     void doDelayCalib();
     int getFrameDelayMs() const;
+    void setFrameDelayMs(int);
     //
 private:
     int frameDelayMs = 0;

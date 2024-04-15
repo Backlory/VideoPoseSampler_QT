@@ -19,7 +19,7 @@ public:
     bool Open(const int);
     bool Close();
     bool isOpened();
-    bool getFrame(cv::Mat &);
+    bool getFrame(cv::Mat &, cv::Rect &);
     std::string getInfo();
 private:
 
@@ -31,6 +31,7 @@ private:
     bool _Reset();
     cv::Mat frame_inflow;
     double timeStamp_inflow; // 时间戳
+    cv::Rect clipROI;
 
     int onRunning();
     std::shared_ptr<boost::thread> m_thread;

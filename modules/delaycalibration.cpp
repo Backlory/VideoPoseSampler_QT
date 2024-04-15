@@ -20,3 +20,8 @@ void DelayCalibration::doDelayCalib(){
 int DelayCalibration::getFrameDelayMs() const {
     return this->frameDelayMs;
 }
+
+void DelayCalibration::setFrameDelayMs(int delay){
+    this->frameDelayMs = delay;
+    return;
+}

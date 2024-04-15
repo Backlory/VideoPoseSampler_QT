@@ -36,7 +36,7 @@ class MainWindow : public QMainWindow
     Q_OBJECT
 
 public:
-    MainWindow(QWidget *parent = nullptr, QString address = "", int port = 0);
+    MainWindow(QWidget *parent = nullptr, QString address = "", int port = 0, int delay = 0, QString saveDir = "", QStringList roiValues= {});
     ~MainWindow();
 
 private:
@@ -58,6 +58,7 @@ private:
     bool onExportingSocket = false;
     cv::Mat cvframe;
     cv::Mat cvframeDisp;
+    cv::Rect clipROI;
     std::vector<int> ndiHandle;  //idx->port name, size == 4
     std::map<int, data_ptr4> ndiData4;  //port name -> port value
     std::map<int, data_ptr6> ndiData6;
@@ -76,6 +77,7 @@ private:
     std::map<int, std::shared_ptr<Eigen::Matrix4d>> ndiOut4;
     //数据导出
     Export * exptImpl;
+    QString exptPath;
     QString sock_address;
     int sock_port;
     int exptIdx = 0;
