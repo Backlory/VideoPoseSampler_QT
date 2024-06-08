@@ -40,7 +40,6 @@ SOURCES += \
     modules/Configloading.cpp \
     modules/cameradetection.cpp \
     modules/comportdetection.cpp \
-    modules/delaycalibration.cpp \
     modules/export.cpp \
     modules/highresolutiontime.cpp \
     modules/ndimodule.cpp \
@@ -58,7 +57,6 @@ HEADERS += \
     modules/Configloading.h \
     modules/cameradetection.h \
     modules/comportdetection.h \
-    modules/delaycalibration.h \
     modules/export.h \
     modules/highresolutiontime.h \
     modules/ndimodule.h \

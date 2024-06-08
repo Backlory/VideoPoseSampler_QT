@@ -15,7 +15,6 @@
 
 #include "modules/cameradetection.h"
 #include "modules/comportdetection.h"
-#include "modules/delaycalibration.h"
 #include "modules/export.h"
 #include "modules/Configloading.h"
 #include "modules/ndimodule.h"
@@ -36,12 +35,11 @@ class MainWindow : public QMainWindow
     Q_OBJECT
 
 public:
-    MainWindow(QWidget *parent = nullptr, QString address = "", int port = 0, int delay = 0, QString saveDir = "", QStringList roiValues= {});
+    MainWindow(QWidget *parent = nullptr, QString address = "", int port = 0, QString saveDir = "", QStringList roiValues= {});
     ~MainWindow();
 
 private:
     Ui::MainWindow *ui;
-    DelayCalibration *DelayClibImpl;
     //
     QTimer * timer;
     TimeStamp *TimeStampImpl;
@@ -68,7 +66,6 @@ private:
     void updatePose(const std::map<int, data_ptr6>);
     void updatePose(const std::map<int, data_ptr4>);
     // ndi显示
-    int ndiOutputType = 6;
     bool ndiActivated0 = false;
     bool ndiActivated1 = false;
     bool ndiActivated2 = false;

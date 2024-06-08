@@ -69,7 +69,13 @@
              <string notr="true">border: 1px solid black;</string>
             </property>
             <property name="text">
-             <string>Frame</string>
+             <string/>
+            </property>
+            <property name="pixmap">
+             <pixmap>source/scientific_background_image_en.png</pixmap>
+            </property>
+            <property name="scaledContents">
+             <bool>true</bool>
             </property>
             <property name="alignment">
              <set>Qt::AlignCenter</set>
@@ -106,19 +112,6 @@
                </property>
                <property name="wordWrap">
                 <bool>true</bool>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QPushButton" name="DelyaC_Pb">
-               <property name="sizePolicy">
-                <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                 <horstretch>0</horstretch>
-                 <verstretch>0</verstretch>
-                </sizepolicy>
-               </property>
-               <property name="text">
-                <string>同步校准...</string>
                </property>
               </widget>
              </item>

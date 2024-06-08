@@ -15,7 +15,6 @@ int main(int argc, char *argv[])
     parser.addOptions({
         {{"a", "address"}, QCoreApplication::translate("main", "Set the address"), QCoreApplication::translate("main", "address")},
         {{"p", "port"}, QCoreApplication::translate("main", "Set the port"), QCoreApplication::translate("main", "port")},
-        {{"d", "delay"}, QCoreApplication::translate("main", "Set the delay of camera"), QCoreApplication::translate("main", "delay")},
         {{"s", "savedir"}, QCoreApplication::translate("main", "Set save path"), QCoreApplication::translate("main", "savedir")}
     });
     QCommandLineOption roiOption("roi", QCoreApplication::translate("main", "define a region of interest(x,y,w,h)."), QCoreApplication::translate("main", "x,y,h,w"));
@@ -24,7 +23,6 @@ int main(int argc, char *argv[])
     // 输出地址和端口
     QString address = parser.value("address");
     int port = parser.value("port").toInt();
-    int delay = parser.value("delay").toInt();
     QString savedir = parser.value("savedir");
     // ROI裁剪
     QStringList roiValues;
@@ -34,7 +32,7 @@ int main(int argc, char *argv[])
 
 
     qDebug() << "address:" << address << ", port:" << port;
-    qDebug() << "delay:" << delay << ", savedir:" << savedir;
+    qDebug() << ", savedir:" << savedir;
 
     //
     QTranslator translator;
@@ -46,7 +44,7 @@ int main(int argc, char *argv[])
             break;
         }
     }
-    MainWindow w(nullptr, address, port, delay, savedir, roiValues);
+    MainWindow w(nullptr, address, port, savedir, roiValues);
     w.show();
     return a.exec();
 }

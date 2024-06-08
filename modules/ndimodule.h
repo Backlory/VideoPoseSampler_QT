@@ -38,7 +38,7 @@ public:
     bool isOpened();
 
     std::vector<int> getHandlers() const;
-    bool getPosition(std::map<int, data_ptr7> &positions, const int frameDelayMs = 0) const;
+    bool getPosition(std::map<int, data_ptr7> &positions) const;
 
 
 private:
