@@ -11,8 +11,6 @@
 
 
 class NDIModule {
-    using data_ptr4 = std::shared_ptr<Eigen::Matrix4d>;
-    using data_ptr6 = std::shared_ptr<Sophus::Vector6d>;
     using data_ptr7 = std::shared_ptr<QuatTransformationStruct>;
 
 public:

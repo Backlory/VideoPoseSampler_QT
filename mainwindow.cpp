@@ -135,24 +135,6 @@ QString pose2str(Eigen::Matrix4d * m){
     return str;
 }
 
-void MainWindow::updatePose(const std::map<int, data_ptr4> poseMap){
-    if (this->ndiActivated0 && this->ndiHandle[0]>0){
-        auto m = poseMap.at(this->ndiHandle[0]);
-        ui->NDI_LableOut0->setText(pose2str(m.get()));
-    }
-    if (this->ndiActivated1 && this->ndiHandle[1]>0){
-        auto m = poseMap.at(this->ndiHandle[1]);
-        ui->NDI_LableOut1->setText(pose2str(m.get()));
-    }
-    if (this->ndiActivated2 && this->ndiHandle[2]>0){
-        auto m = poseMap.at(this->ndiHandle[2]);
-        ui->NDI_LableOut2->setText(pose2str(m.get()));
-    }
-    if (this->ndiActivated3 && this->ndiHandle[3]>0){
-        auto m = poseMap.at(this->ndiHandle[3]);
-        ui->NDI_LableOut3->setText("NDI0: \n" + pose2str(m.get()));
-    }
-}
 
 QString pose2str(Sophus::Vector6d * m){
     QString str;
@@ -166,24 +148,6 @@ QString pose2str(Sophus::Vector6d * m){
     return str;
 }
 
-void MainWindow::updatePose(const std::map<int, data_ptr6> poseMap){
-    if (this->ndiActivated0 && this->ndiHandle[0]>0){
-        auto m = poseMap.at(this->ndiHandle[0]);
-        ui->NDI_LableOut0->setText(pose2str(m.get()));
-    }
-    if (this->ndiActivated1 && this->ndiHandle[1]>0){
-        auto m = poseMap.at(this->ndiHandle[1]);
-        ui->NDI_LableOut1->setText(pose2str(m.get()));
-    }
-    if (this->ndiActivated2 && this->ndiHandle[2]>0){
-        auto m = poseMap.at(this->ndiHandle[2]);
-        ui->NDI_LableOut2->setText(pose2str(m.get()));
-    }
-    if (this->ndiActivated3 && this->ndiHandle[3]>0){
-        auto m = poseMap.at(this->ndiHandle[3]);
-        ui->NDI_LableOut3->setText("NDI0: \n" + pose2str(m.get()));
-    }
-}
 
 /*
     * 主循环更新函数。包括：

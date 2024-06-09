@@ -10,20 +10,18 @@
 #include <QStandardItem>
 #include <QMessageBox>
 #include <QImage>
+#include <QInputDialog>
 
 #include "Sophus/so3.hpp"
 
 #include "modules/cameradetection.h"
 #include "modules/comportdetection.h"
 #include "modules/export.h"
-#include "modules/Configloading.h"
 #include "modules/ndimodule.h"
 #include "modules/export.h"
 #include "modules/opencvframe.h"
 #include "modules/timestamp.h"
 
-using data_ptr4 = std::shared_ptr<Eigen::Matrix4d>;
-using data_ptr6 = std::shared_ptr<Sophus::Vector6d>;
 using data_ptr7 = std::shared_ptr<QuatTransformationStruct>;
 
 QT_BEGIN_NAMESPACE
@@ -58,13 +56,9 @@ private:
     cv::Mat cvframeDisp;
     cv::Rect clipROI;
     std::vector<int> ndiHandle;  //idx->port name, size == 4
-    std::map<int, data_ptr4> ndiData4;  //port name -> port value
-    std::map<int, data_ptr6> ndiData6;
-    std::map<int, data_ptr7> ndiData7;
+    std::map<int, data_ptr7> ndiData7;  //port name -> port value
     void updateFrame(const cv::Mat &);
     void updatePose(const std::map<int, data_ptr7>);
-    void updatePose(const std::map<int, data_ptr6>);
-    void updatePose(const std::map<int, data_ptr4>);
     // ndi显示
     bool ndiActivated0 = false;
     bool ndiActivated1 = false;
@@ -85,7 +79,6 @@ private:
 
 public slots:
     void onTime();
-    void onDelyaC_PbClick();
     void onCamD_PbResetClick();
     void onCamD_PbConnectClick();
     void onComD_PbConnectClick();

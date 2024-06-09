@@ -37,7 +37,6 @@ SOURCES += \
     ../3rdparty/fmt-7.1.3/src/os.cc \
     main.cpp \
     mainwindow.cpp \
-    modules/Configloading.cpp \
     modules/cameradetection.cpp \
     modules/comportdetection.cpp \
     modules/export.cpp \
@@ -54,7 +53,6 @@ HEADERS += \
     ../3rdparty/Aurora/INIFileRW.h \
     main.h \
     mainwindow.h \
-    modules/Configloading.h \
     modules/cameradetection.h \
     modules/comportdetection.h \
     modules/export.h \
