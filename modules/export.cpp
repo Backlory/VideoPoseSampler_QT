@@ -64,10 +64,10 @@ bool Export::SocketInit(std::string adddress , int port){
     setsockopt(this->sockServer, SOL_SOCKET, SO_RCVBUF, (const char*)&nRecvBuf, sizeof(int));
     int nSendBuf = 200 * 1024; //设置为200K
     setsockopt(this->sockServer, SOL_SOCKET, SO_SNDBUF, (const char*)&nSendBuf, sizeof(int));
-    struct timeval nNetTimeout;
-    nNetTimeout.tv_sec = 5;  // 等待10秒
-    nNetTimeout.tv_usec = 0;
-    setsockopt(this->sockServer, SOL_SOCKET, SO_RCVTIMEO, (char*)&nNetTimeout, sizeof(nNetTimeout));
+    //struct timeval nNetTimeout;
+    //nNetTimeout.tv_sec = 5;  // 等待10秒
+    //nNetTimeout.tv_usec = 0;
+    //setsockopt(this->sockServer, SOL_SOCKET, SO_RCVTIMEO, (char*)&nNetTimeout, sizeof(nNetTimeout));
 
     listen(this->sockServer, 2); //监听连接请求
     try {

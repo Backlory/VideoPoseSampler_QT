@@ -41,8 +41,8 @@ MainWindow::MainWindow(QWidget *parent, QString address, int port, QString saveD
             auto roiValuesList = roiValues.at(0).split(",");
             this->clipROI.x = roiValuesList.at(0).toInt();
             this->clipROI.y = roiValuesList.at(1).toInt();
-            this->clipROI.height = roiValuesList.at(2).toInt();
-            this->clipROI.width = roiValuesList.at(3).toInt();
+            this->clipROI.width = roiValuesList.at(2).toInt();
+            this->clipROI.height = roiValuesList.at(3).toInt();
         } catch (...) {
             this->clipROI.x = 0;
             this->clipROI.y = 0;

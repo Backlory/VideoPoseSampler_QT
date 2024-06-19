@@ -17,7 +17,7 @@ int main(int argc, char *argv[])
         {{"p", "port"}, QCoreApplication::translate("main", "Set the port"), QCoreApplication::translate("main", "port")},
         {{"s", "savedir"}, QCoreApplication::translate("main", "Set save path"), QCoreApplication::translate("main", "savedir")}
     });
-    QCommandLineOption roiOption("roi", QCoreApplication::translate("main", "define a region of interest(x,y,w,h)."), QCoreApplication::translate("main", "x,y,h,w"));
+    QCommandLineOption roiOption("roi", QCoreApplication::translate("main", "define a region of interest(x,y,w,h)."), QCoreApplication::translate("main", "x,y,w,h"));
     parser.addOption(roiOption);
     parser.process(a);
     // 输出地址和端口
