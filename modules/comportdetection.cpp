@@ -16,7 +16,7 @@ std::vector<std::string> COMPortDetection::getAvailablePorts() {
     //
     boost::asio::io_context io;
     boost::asio::serial_port serial(io);
-    for (unsigned int i = 0; i < 16; ++i) {
+    for (unsigned int i = 0; i < 99; ++i) {
         std::string portName = "COM" + std::to_string(i);
         try {
             serial.open(portName);
