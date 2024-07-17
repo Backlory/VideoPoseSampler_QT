@@ -19,6 +19,7 @@ public:
     bool Open(const int);
     bool Close();
     bool isOpened();
+    bool changeSize(const int, const int);
     bool getFrame(cv::Mat &, cv::Rect &);
     std::string getInfo();
 private:
@@ -27,6 +28,7 @@ private:
     OpenCVFrame(const OpenCVFrame&) = delete;
     ~OpenCVFrame();
 
+    int CaptureDeviceidx;
     cv::VideoCapture* cap;
     bool _Reset();
     cv::Mat frame_inflow;

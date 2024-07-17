@@ -82,6 +82,7 @@ public slots:
     void onCamD_PbResetClick();
     void onCamD_PbConnectClick();
     void onComD_PbConnectClick();
+    void onComD_PbChangeRClick();
     void onComD_PbResetClick();
     void onExport_PbRunPauseClick();
     void onExport_PbClick();

@@ -70,6 +70,7 @@ bool OpenCVFrame::Open(const int index) {
         throw "video capture has been opened!";
     }
     this->cap = new cv::VideoCapture(index);
+    this->CaptureDeviceidx = index;
     this->th_sampleId = 0;
     this->th_timeStamp = "";
     return this->cap->isOpened();
@@ -82,6 +83,14 @@ bool OpenCVFrame::isOpened(){
         return this->cap->isOpened();
 }
 
+bool OpenCVFrame::changeSize(const int frameHeight, const int frameWidth){
+    if (this->isOpened()){
+        this->cap->set(cv::CAP_PROP_FRAME_HEIGHT, frameHeight);
+        this->cap->set(cv::CAP_PROP_FRAME_WIDTH, frameWidth);
+        return true;
+    }
+    return false;
+}
 
 bool OpenCVFrame::Close(){
     this->_Reset();

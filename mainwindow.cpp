@@ -57,6 +57,7 @@ MainWindow::MainWindow(QWidget *parent, QString address, int port, QString saveD
     connect(ui->CamD_PbConnect, &QPushButton::clicked, this, &MainWindow::onCamD_PbConnectClick);
     connect(ui->ComD_PbReset, &QPushButton::clicked, this, &MainWindow::onComD_PbResetClick);
     connect(ui->ComD_PbConnect, &QPushButton::clicked, this, &MainWindow::onComD_PbConnectClick);
+    connect(ui->CamD_PbChangeR, &QPushButton::clicked, this, &MainWindow::onComD_PbChangeRClick);
 
     connect(ui->Export_PbRunPause, &QPushButton::clicked, this, &MainWindow::onExport_PbRunPauseClick);
     connect(ui->Export_Pb, &QPushButton::clicked, this, &MainWindow::onExport_PbClick);
@@ -376,6 +377,19 @@ void MainWindow::onComD_PbResetClick(){
     QApplication::processEvents();
     return;
 }
+
+void MainWindow::onComD_PbChangeRClick(){
+    if (opcvFrmImpl->isOpened()){
+        bool bOK = false;
+        int height = QInputDialog::getInt(this, "高度", "请输入视频流高度", 1080, 0, 10000, 1, &bOK);
+        if (!bOK) return;
+        int width = QInputDialog::getInt(this, "宽度", "请输入视频流宽度", 1920, 0, 10000, 1, &bOK);
+        if (!bOK) return;
+        opcvFrmImpl->changeSize(height, width);
+    }
+    return;
+}
+
 void MainWindow::onComD_PbConnectClick(){
     //清空
     if(this->ui->NDI_Cb0->isChecked()){this->ui->NDI_Cb0->click();}
