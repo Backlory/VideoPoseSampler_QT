@@ -65,11 +65,14 @@ bool OpenCVFrame::_Reset(){
 /*
 * 当cap为nullptr时，打开视频流，否则报错
 */
-bool OpenCVFrame::Open(const int index) {
+bool OpenCVFrame::Open(const int index, const int frameHeight, const int frameWidth) {
     if (this->cap != nullptr){
         throw "video capture has been opened!";
     }
     this->cap = new cv::VideoCapture(index);
+    if (frameHeight>0 && frameWidth>0){
+        this->changeSize(frameHeight, frameWidth);
+    }
     this->CaptureDeviceidx = index;
     this->th_sampleId = 0;
     this->th_timeStamp = "";

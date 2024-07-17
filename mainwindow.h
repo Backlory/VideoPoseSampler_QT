@@ -33,7 +33,7 @@ class MainWindow : public QMainWindow
     Q_OBJECT
 
 public:
-    MainWindow(QWidget *parent = nullptr, QString address = "", int port = 0, QString saveDir = "", QStringList roiValues= {});
+    MainWindow(QWidget *parent = nullptr, QString address = "", int port = 0, QString saveDir = "", QStringList roiValues= {}, QStringList sizeValues= {});
     ~MainWindow();
 
 private:
@@ -55,6 +55,7 @@ private:
     cv::Mat cvframe;
     cv::Mat cvframeDisp;
     cv::Rect clipROI;
+    int frameHeight, frameWidth;
     std::vector<int> ndiHandle;  //idx->port name, size == 4
     std::map<int, data_ptr7> ndiData7;  //port name -> port value
     void updateFrame(const cv::Mat &);

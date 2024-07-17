@@ -3,7 +3,7 @@
 
 
 
-MainWindow::MainWindow(QWidget *parent, QString address, int port, QString saveDir, QStringList roiValues)
+MainWindow::MainWindow(QWidget *parent, QString address, int port, QString saveDir, QStringList roiValues, QStringList sizeValues)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
 {
@@ -48,6 +48,21 @@ MainWindow::MainWindow(QWidget *parent, QString address, int port, QString saveD
             this->clipROI.y = 0;
             this->clipROI.width = 0;
             this->clipROI.height = 0;
+        }
+    }
+    //size
+    if(sizeValues.length() == 0){
+        this->frameHeight = -1;
+        this->frameWidth = -1;
+    }
+    else{
+        try {
+            auto sizeValuesList = sizeValues.at(0).split(",");
+            this->frameHeight = sizeValuesList.at(0).toInt();
+            this->frameWidth = sizeValuesList.at(1).toInt();
+        } catch (...) {
+            this->frameHeight = -1;
+            this->frameWidth = -1;
         }
     }
 
@@ -264,7 +279,7 @@ void MainWindow::onCamD_PbConnectClick(){
     camDetImpl->activateCam(std::to_string(camIndex));
     ui->CamD_Label->setText("当前相机: "+QString::fromStdString(camDetImpl->getActivateCam()));
     // 打开相机, str转int
-    opcvFrmImpl->Open(camIndex);
+    opcvFrmImpl->Open(camIndex, this->frameHeight, this->frameWidth);
 
     if (this->onRunning == false){
         this->onRunning = true;

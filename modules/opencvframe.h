@@ -16,7 +16,7 @@ public:
         return ocvf;
     }
     //
-    bool Open(const int);
+    bool Open(const int, const int, const int );
     bool Close();
     bool isOpened();
     bool changeSize(const int, const int);
