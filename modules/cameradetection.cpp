@@ -1,29 +1,20 @@
 #include "cameradetection.h"
 
 CameraDetection::CameraDetection()
-{
-    cv::Mat a = cv::Mat::zeros(1,6, CV_8UC1);
-}
-
-
-std::vector<std::string> CameraDetection::detectCam(){
-    std::vector<std::string> camAvailable;
-    for (int i=0; i<5; i++){
-        //测试摄像头是否可用，可用则加入camAvailable
-        if (this->testCam(i)){
-            camAvailable.push_back(std::to_string(i));
-        }
-    }
-    return camAvailable;
-}
+{}
 
 
 std::string CameraDetection::getActivateCam(){
-    return this->activateCamIndex;
+    std::string ret = std::to_string(this->activateCamIndex);
+    return ret;
 }
 
-void CameraDetection::activateCam(const std::string index){
-    this->activateCamIndex = index;
+bool CameraDetection::activateCam(const int camIndex){
+    if (testCam(camIndex)){
+        this->activateCamIndex = camIndex;
+        return true;
+    }
+    return false;
 }
 
 /*
@@ -32,7 +23,9 @@ void CameraDetection::activateCam(const std::string index){
     * @return:可用返回true，否则返回false
 */
 bool CameraDetection::testCam(int i){
-    cv::VideoCapture testcap(i);
+    // 如果i是0 1 2 3 4 5
+    cv::VideoCapture testcap;
+    testcap.open(i);
     bool ret = false;
     if (!testcap.isOpened()) {
         return false;
@@ -43,7 +36,9 @@ bool CameraDetection::testCam(int i){
         if (!frame.empty()){
             ret = true;
         }
+        ret = true;
     }
     testcap.release();
     return ret;
 }
+

@@ -4,6 +4,7 @@
 #include <QMainWindow>
 #include <QPushButton>
 #include <qstring.h>
+#include <string.h>
 #include <QTimer>
 #include <QDateTime>
 #include <QStandardItemModel>
@@ -11,6 +12,7 @@
 #include <QMessageBox>
 #include <QImage>
 #include <QInputDialog>
+#include <QDesktopServices>
 
 #include "Sophus/so3.hpp"
 
@@ -80,7 +82,6 @@ private:
 
 public slots:
     void onTime();
-    void onCamD_PbResetClick();
     void onCamD_PbConnectClick();
     void onComD_PbConnectClick();
     void onComD_PbChangeRClick();
@@ -88,6 +89,7 @@ public slots:
     void onExport_PbRunPauseClick();
     void onExport_PbClick();
     void onExport_PbSocketClick();
+    void onPbShowSaveClick();
     void onNDI_Cb0Click();  // 复选框
     void onNDI_Cb1Click();
     void onNDI_Cb2Click();

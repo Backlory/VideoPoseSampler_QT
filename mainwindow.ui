@@ -115,6 +115,13 @@
                </property>
               </widget>
              </item>
+             <item>
+              <widget class="QPushButton" name="pB_showSave">
+               <property name="text">
+                <string>打开保存文件夹</string>
+               </property>
+              </widget>
+             </item>
             </layout>
            </widget>
           </widget>
@@ -409,6 +416,46 @@
        </property>
        <layout class="QVBoxLayout" name="verticalLayout_3">
         <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_3">
+          <item>
+           <widget class="QLabel" name="CamD_Label">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="text">
+             <string>相机：</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="CamD_PbConnect">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="styleSheet">
+             <string notr="true">background-color: rgb(15, 221, 22);</string>
+            </property>
+            <property name="text">
+             <string>连接</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="CamD_PbChangeR">
+            <property name="text">
+             <string>修改分辨率</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
          <layout class="QHBoxLayout" name="horizontalLayout_4">
           <item>
            <widget class="QLabel" name="ComD_Label">
@@ -426,6 +473,9 @@
           </item>
           <item>
            <widget class="QPushButton" name="ComD_PbConnect">
+            <property name="styleSheet">
+             <string notr="true">background-color: rgb(15, 221, 22);</string>
+            </property>
             <property name="text">
              <string>连接</string>
             </property>
@@ -435,66 +485,6 @@
         </item>
         <item>
          <widget class="QListView" name="ComD_ListView">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="maximumSize">
-           <size>
-            <width>16777215</width>
-            <height>100</height>
-           </size>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <layout class="QHBoxLayout" name="horizontalLayout_3">
-          <item>
-           <widget class="QLabel" name="CamD_Label">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="text">
-             <string>相机：</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QPushButton" name="CamD_PbReset">
-            <property name="text">
-             <string>重置</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QPushButton" name="CamD_PbConnect">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="text">
-             <string>连接</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QPushButton" name="CamD_PbChangeR">
-            <property name="text">
-             <string>修改分辨率</string>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </item>
-        <item>
-         <widget class="QListView" name="CamD_ListView">
           <property name="sizePolicy">
            <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
             <horstretch>0</horstretch>
@@ -535,6 +525,9 @@
             <width>0</width>
             <height>40</height>
            </size>
+          </property>
+          <property name="styleSheet">
+           <string notr="true">background-color: rgb(15, 221, 22);</string>
           </property>
           <property name="text">
            <string>启动</string>

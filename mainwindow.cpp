@@ -25,7 +25,6 @@ MainWindow::MainWindow(QWidget *parent, QString address, int port, QString saveD
     
     opcvFrmImpl = &OpenCVFrame::GetInstance();
     ndiImpl = &NDIModule::GetInstance();
-
     // socket
     this->sock_address = address.isEmpty()?"127.0.0.1" : address;
     this->sock_port = port == 0? 8998 : port;
@@ -68,11 +67,11 @@ MainWindow::MainWindow(QWidget *parent, QString address, int port, QString saveD
 
     // connect
     connect(timer, &QTimer::timeout, this, &MainWindow::onTime);
-    connect(ui->CamD_PbReset, &QPushButton::clicked, this, &MainWindow::onCamD_PbResetClick);
     connect(ui->CamD_PbConnect, &QPushButton::clicked, this, &MainWindow::onCamD_PbConnectClick);
-    connect(ui->ComD_PbReset, &QPushButton::clicked, this, &MainWindow::onComD_PbResetClick);
     connect(ui->ComD_PbConnect, &QPushButton::clicked, this, &MainWindow::onComD_PbConnectClick);
     connect(ui->CamD_PbChangeR, &QPushButton::clicked, this, &MainWindow::onComD_PbChangeRClick);
+
+    connect(ui->pB_showSave, &QPushButton::clicked, this, &MainWindow::onPbShowSaveClick);
 
     connect(ui->Export_PbRunPause, &QPushButton::clicked, this, &MainWindow::onExport_PbRunPauseClick);
     connect(ui->Export_Pb, &QPushButton::clicked, this, &MainWindow::onExport_PbClick);
@@ -85,7 +84,6 @@ MainWindow::MainWindow(QWidget *parent, QString address, int port, QString saveD
     connect(ui->NDI_Cb3, &QPushButton::clicked, this, &MainWindow::onNDI_Cb3Click);
 
     // standby
-    ui->CamD_PbReset->click();
     ui->ComD_PbReset->click();
 }
 
@@ -243,40 +241,18 @@ void MainWindow::onTime(){
 
 // ====== 01 camera 相关交互 ======
 
-
-void MainWindow::onCamD_PbResetClick(){
-    // 关闭播放
-    if (this->onRunning == true){
-        this->onRunning = false;
-        this->timer->stop();
-        this->ui->Export_PbRunPause->setText("启动");
-    }
-    // 清空
-    modelCam->clear();
-    QApplication::processEvents();
-    // 关闭相机
-    opcvFrmImpl->Close();
-    ui->CamD_Label->setText("当前相机: 关闭");
-
-    // 检查相机列表
-    std::vector<std::string> camList = camDetImpl->detectCam();
-    for(int i=0; i<camList.size(); i++){
-        QStandardItem *item = new QStandardItem("camera:"+QString::fromStdString(camList.at(i)));
-        modelCam->appendRow(item);
-    }
-    // 加载到列表
-    ui->CamD_ListView->setModel(modelCam);
-    ui->CamD_ListView->setCurrentIndex(modelCam->index(0, 0));
-    QApplication::processEvents();
-}
-
 void MainWindow::onCamD_PbConnectClick(){
     opcvFrmImpl->Close();
     ui->CamD_Label->setText("当前相机: 关闭");
-    //
-    QModelIndex index = ui->CamD_ListView->currentIndex();
-    int camIndex = index.row();
-    camDetImpl->activateCam(std::to_string(camIndex));
+    bool bOK = false;
+    // 确保输入数字
+    int camIndex = QInputDialog::getInt(this, "相机索引", "请输入相机索引", 0, 0, 10000, 1, &bOK);
+    if (!bOK) return;
+    // 激活相机
+    if(camDetImpl->activateCam(camIndex) == false){
+        QMessageBox::warning(this, "错误", "无法读取有效图片，请检查以下相机或文件路径是否有误:\n"+QString::fromStdString(camDetImpl->getActivateCam()));
+        return;
+    }
     ui->CamD_Label->setText("当前相机: "+QString::fromStdString(camDetImpl->getActivateCam()));
     // 打开相机, str转int
     opcvFrmImpl->Open(camIndex, this->frameHeight, this->frameWidth);
@@ -402,6 +378,9 @@ void MainWindow::onComD_PbChangeRClick(){
         if (!bOK) return;
         opcvFrmImpl->changeSize(height, width);
     }
+    else{
+        QMessageBox::warning(this, "错误", "请先连接相机!");
+    }
     return;
 }
 
@@ -454,6 +433,12 @@ void MainWindow::onComD_PbConnectClick(){
     else
     {this->ui->NDI_LableState3->setText("状态：disconnected");}
     this->ui->ComD_PbConnect->setEnabled(false);
+}
+
+void MainWindow::onPbShowSaveClick(){
+    // 打开保存文件夹
+    QDesktopServices::openUrl(QUrl::fromLocalFile(this->exptFolderPath));
+    return;
 }
 
 // ====== 04 NDI 交互 ======

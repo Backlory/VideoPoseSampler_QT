@@ -11,12 +11,11 @@ public:
     CameraDetection();
     ~CameraDetection(){};
 
-    std::vector<std::string> detectCam();
     std::string getActivateCam();
-    void activateCam(const std::string);
+    bool activateCam(const int);
 private:
+    int activateCamIndex;
     bool testCam(int);
-    std::string activateCamIndex;
 
 };
 

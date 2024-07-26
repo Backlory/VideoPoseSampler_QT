@@ -2,7 +2,7 @@
  * @Author: backlory's desktop dbdx_liyaning@126.com
  * @Date: 2024-03-12 14:06:59
  * @LastEditors: backlory's desktop dbdx_liyaning@126.com
- * @LastEditTime: 2024-03-13 22:09:19
+ * @LastEditTime: 2024-07-26 18:56:04
  * @Description: 
  * 
  * Copyright (c) 2024 by Backlory, (email: dbdx_liyaning@126.com), All Rights Reserved.
@@ -69,7 +69,8 @@ bool OpenCVFrame::Open(const int index, const int frameHeight, const int frameWi
     if (this->cap != nullptr){
         throw "video capture has been opened!";
     }
-    this->cap = new cv::VideoCapture(index);
+    this->cap = new cv::VideoCapture;
+    this->cap->open(index);
     if (frameHeight>0 && frameWidth>0){
         this->changeSize(frameHeight, frameWidth);
     }
