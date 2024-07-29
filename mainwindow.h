@@ -13,6 +13,8 @@
 #include <QImage>
 #include <QInputDialog>
 #include <QDesktopServices>
+#include <QThread>
+#include <QListView>
 
 #include "Sophus/so3.hpp"
 
@@ -29,6 +31,21 @@ using data_ptr7 = std::shared_ptr<QuatTransformationStruct>;
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
 QT_END_NAMESPACE
+
+
+class Worker_ComInit: public QThread
+{
+public:
+    Worker_ComInit(QListView *listView, QStandardItemModel *modelCom, COMPortDetection *comDetImpl);
+    void run() override;
+
+private:
+    QListView *listView;
+    QStandardItemModel *modelCom;
+    COMPortDetection *comDetImpl;
+    bool onRun;
+};
+
 
 class MainWindow : public QMainWindow
 {
@@ -77,14 +94,16 @@ private:
     int exptIdx = 0;
     std::vector<double> fpsList;
     QString exptFolderPath;
+    //多线程
+    Worker_ComInit *worker_cominit;
 
 
 
 public slots:
     void onTime();
     void onCamD_PbConnectClick();
+    void onCamD_PbChangeRClick();
     void onComD_PbConnectClick();
-    void onComD_PbChangeRClick();
     void onComD_PbResetClick();
     void onExport_PbRunPauseClick();
     void onExport_PbClick();
@@ -95,5 +114,7 @@ public slots:
     void onNDI_Cb2Click();
     void onNDI_Cb3Click();
 };
+
+
 
 #endif // MAINWINDOW_H

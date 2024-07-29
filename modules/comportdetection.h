@@ -4,7 +4,9 @@
 #include "../3rdparty/Aurora/INIFileRW.h"
 #include <string>
 #include <vector>
+#include <map>
 #include "boost/asio.hpp"
+
 
 class COMPortDetection {
 public:

@@ -68,8 +68,9 @@ MainWindow::MainWindow(QWidget *parent, QString address, int port, QString saveD
     // connect
     connect(timer, &QTimer::timeout, this, &MainWindow::onTime);
     connect(ui->CamD_PbConnect, &QPushButton::clicked, this, &MainWindow::onCamD_PbConnectClick);
+    connect(ui->CamD_PbChangeR, &QPushButton::clicked, this, &MainWindow::onCamD_PbChangeRClick);
     connect(ui->ComD_PbConnect, &QPushButton::clicked, this, &MainWindow::onComD_PbConnectClick);
-    connect(ui->CamD_PbChangeR, &QPushButton::clicked, this, &MainWindow::onComD_PbChangeRClick);
+    connect(ui->ComD_PbReset, &QPushButton::clicked, this, &MainWindow::onComD_PbResetClick);
 
     connect(ui->pB_showSave, &QPushButton::clicked, this, &MainWindow::onPbShowSaveClick);
 
@@ -84,6 +85,7 @@ MainWindow::MainWindow(QWidget *parent, QString address, int port, QString saveD
     connect(ui->NDI_Cb3, &QPushButton::clicked, this, &MainWindow::onNDI_Cb3Click);
 
     // standby
+    this->worker_cominit = new Worker_ComInit(ui->ComD_ListView, this->modelCom, this->comDetImpl);
     ui->ComD_PbReset->click();
 }
 
@@ -93,6 +95,7 @@ MainWindow::~MainWindow()
     delete TimeStampImpl;
     delete camDetImpl;
     delete exptImpl;
+    delete worker_cominit;
 }
 
 // ==================== ui交互部分 ============================================//
@@ -342,6 +345,36 @@ void MainWindow::onExport_PbSocketClick() {
 }
 
 // ====== 03 COM口 交互 ======
+
+Worker_ComInit::Worker_ComInit(QListView *listView, QStandardItemModel *modelCom, COMPortDetection *comDetImpl) {
+    this->listView = listView;
+    this->modelCom = modelCom;
+    this->comDetImpl = comDetImpl;
+    onRun = false;
+}
+
+void Worker_ComInit::run(){
+    if (onRun){
+        return;
+    }
+    // 开始提示
+    onRun = true;
+    // 检查端口列表
+    std::vector<std::string> comList = comDetImpl->getAvailablePorts();
+
+    // 显示
+    modelCom->clear();
+    for(int i=0; i<comList.size(); i++){
+        QStandardItem *item = new QStandardItem(QString::fromStdString(comList.at(i))); // 可能不会有内存泄漏危险，因为modelCom->clear()能帮助
+        modelCom->appendRow(item);
+    }
+    // 加载到列表
+    listView->setModel(modelCom);
+    listView->setCurrentIndex(modelCom->index(0, 0));
+    onRun = false;
+    return;
+}
+
 void MainWindow::onComD_PbResetClick(){
     // 关闭播放
     if (this->onRunning == true){
@@ -350,26 +383,23 @@ void MainWindow::onComD_PbResetClick(){
         this->ui->Export_PbRunPause->setText("启动");
     }
     // 清空
-    modelCom->clear();
-    QApplication::processEvents();
+
     // 关闭端口
     this->ndiImpl->Close();
     ui->ComD_Label->setText("当前端口: 关闭");
 
-    // 检查相机列表
-    std::vector<std::string> comList = comDetImpl->getAvailablePorts();
-    for(int i=0; i<comList.size(); i++){
-        QStandardItem *item = new QStandardItem(QString::fromStdString(comList.at(i)));
-        modelCom->appendRow(item);
-    }
-    // 加载到列表
+    // 检查端口列表
+    modelCom->clear();
+    QStandardItem *item = new QStandardItem("正在检查端口...");
+    modelCom->appendRow(item);
     ui->ComD_ListView->setModel(modelCom);
-    ui->ComD_ListView->setCurrentIndex(modelCom->index(0, 0));
     QApplication::processEvents();
+    // 加载到列表
+    this->worker_cominit->start();
     return;
 }
 
-void MainWindow::onComD_PbChangeRClick(){
+void MainWindow::onCamD_PbChangeRClick(){
     if (opcvFrmImpl->isOpened()){
         bool bOK = false;
         int height = QInputDialog::getInt(this, "高度", "请输入视频流高度", 1080, 0, 10000, 1, &bOK);
