@@ -400,6 +400,11 @@ void MainWindow::onComD_PbResetClick(){
 }
 
 void MainWindow::onCamD_PbChangeRClick(){
+    //若已指定则询问是否更改
+    if (this->clipROI.width > 0){
+        int ret = QMessageBox::question(this, "更改ROI", "警告：已经有来自参数的ROI可用。强行更改ROI可能导致尺度因子标定失效。\n是否更改ROI？", QMessageBox::Yes | QMessageBox::No, QMessageBox::No);
+        if (ret == QMessageBox::No) return;
+    }
     if (opcvFrmImpl->isOpened()){
         bool bOK = false;
         int height = QInputDialog::getInt(this, "高度", "请输入视频流高度", 1080, 0, 10000, 1, &bOK);

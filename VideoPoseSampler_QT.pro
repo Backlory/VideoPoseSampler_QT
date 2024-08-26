@@ -69,6 +69,18 @@ TRANSLATIONS += \
 CONFIG += lrelease
 CONFIG += embed_translations
 
+RC_ICONS = assets/vps.ico # ico
+
+CONFIG += file_copies
+adddir_d.files = $$PWD/assets
+adddir_d.files += $$PWD/config
+adddir_d.path = $$OUT_PWD/debug
+COPIES += adddir_d
+adddir_r.files = $$PWD/assets
+adddir_r.files += $$PWD/config
+adddir_r.path = $$OUT_PWD/release
+COPIES += adddir_r
+
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
 else: unix:!android: target.path = /opt/$${TARGET}/bin
