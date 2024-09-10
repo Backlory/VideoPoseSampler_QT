@@ -46,8 +46,6 @@ int OpenCVFrame::onRunning(){
     return 0;
 }
 
-
-
 /*
  * 关闭并重置cap为nullptr
 */
@@ -121,6 +119,7 @@ std::string OpenCVFrame::getInfo(){
  * 获取视频流的帧。加锁截取一帧，转换为RGB格式并返回
  * 时间：read指令时刻，真正成像时刻，流中保存时刻，取得数据时刻。
  * 在没有GPS授时的情况下，绝对时间都是不准的，这里的时间戳只是为了相对同步，因此不论是其实放哪里都行。
+ * return True: success； false：failed
 */
 bool OpenCVFrame::getFrame(cv::Mat &fm, cv::Rect &clip_roi){
     {
@@ -129,20 +128,21 @@ bool OpenCVFrame::getFrame(cv::Mat &fm, cv::Rect &clip_roi){
         this->frame_inflow.copyTo(fm);
         this->timeStamp_inflow = t; //
     }
-    if (clip_roi.width <= 0)
-        return true;
+    if (clip_roi.width <= 0) { 
+        fm = cv::Mat();
+        return false;
+    }
     else{
         this->clipROI = clip_roi;
         cv::Size fmSize = fm.size();
         if (clip_roi.x < 0 || clip_roi.y < 0 ||
             clip_roi.x + clip_roi.width > fmSize.width || clip_roi.y + clip_roi.height > fmSize.height) {
-            // 如果 clip_roi 超出了边界，调整它的位置
-            clip_roi.x = std::max(clip_roi.x, 0);
-            clip_roi.y = std::max(clip_roi.y, 0);
-            clip_roi.width = std::min(clip_roi.width, fmSize.width - clip_roi.x);
-            clip_roi.height = std::min(clip_roi.height, fmSize.height - clip_roi.y);
+            fm = cv::Mat();
+            return false;
         }
-        fm = fm(clip_roi);
-        return true;
+        else{
+            fm = fm(clip_roi);
+            return true;
+        }
     }
 }

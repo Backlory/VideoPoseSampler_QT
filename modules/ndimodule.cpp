@@ -45,7 +45,7 @@ bool NDIModule::Initialize(bool forceReset, int comPort) {
     if (!m_aurora->nOpenComPort(nComPort)) {
         throw std::runtime_error("COM Port could not be opened! Check if NDI Aurora is connected.");
     }
-    if (bResetHardware) {
+    if (bResetHardware) { //time cost a lot
         if (!m_aurora->nHardWareReset()) {
             throw std::runtime_error("HardWareReset Error!");
         }

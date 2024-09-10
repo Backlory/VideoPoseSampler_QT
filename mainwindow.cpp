@@ -104,6 +104,7 @@ MainWindow::~MainWindow()
     * @param frame: 画面帧
 */
 void MainWindow::updateFrame(const cv::Mat & frame){
+    if (frame.empty()) return;
     cv::cvtColor(frame, cvframeDisp, cv::COLOR_BGR2RGB);
     QImage img = QImage((const unsigned char*)(cvframeDisp.data), cvframeDisp.cols, cvframeDisp.rows, cvframeDisp.cols*3 , QImage::Format_RGB888);
     QPixmap img2 = QPixmap::fromImage(img).scaled(ui->OpcvF_LableFrame->size(), Qt::KeepAspectRatio,Qt::SmoothTransformation);
