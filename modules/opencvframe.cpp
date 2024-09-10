@@ -128,9 +128,8 @@ bool OpenCVFrame::getFrame(cv::Mat &fm, cv::Rect &clip_roi){
         this->frame_inflow.copyTo(fm);
         this->timeStamp_inflow = t; //
     }
-    if (clip_roi.width <= 0) { 
-        fm = cv::Mat();
-        return false;
+    if (clip_roi.width <= 0) { // 无需roi处理
+        return true;
     }
     else{
         this->clipROI = clip_roi;
