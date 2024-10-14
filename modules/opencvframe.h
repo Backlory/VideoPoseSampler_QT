@@ -5,7 +5,7 @@
 #include <assert.h>
 #include "opencv2/opencv.hpp"
 #include <boost/thread.hpp>
-#include "highresolutiontime.h""
+#include "highresolutiontime.h"
 
 class OpenCVFrame {
 public:

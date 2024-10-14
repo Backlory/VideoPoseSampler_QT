@@ -2,7 +2,7 @@
  * @Author: backlory's desktop dbdx_liyaning@126.com
  * @Date: 2024-03-12 14:06:59
  * @LastEditors: backlory's desktop dbdx_liyaning@126.com
- * @LastEditTime: 2024-07-26 18:56:04
+ * @LastEditTime: 2024-10-11 23:48:37
  * @Description: 
  * 
  * Copyright (c) 2024 by Backlory, (email: dbdx_liyaning@126.com), All Rights Reserved.
@@ -13,7 +13,7 @@ OpenCVFrame::OpenCVFrame() {
     this->cap = nullptr;
     this->th_sampleId = 0;
     this->th_timeStamp = "";
-    this->m_thread = std::make_shared<boost::thread>(std::bind(&OpenCVFrame::onRunning, this));
+    this->m_thread = std::make_shared<boost::thread>(std::bind(&OpenCVFrame::onRunning, this)); //这里的m_thread是异常安全的
 }
 
 OpenCVFrame::~OpenCVFrame()

@@ -15,6 +15,9 @@
 #include <QDesktopServices>
 #include <QThread>
 #include <QListView>
+#include <QProgressBar>
+#include <QLabel>
+#include <QDebug>
 
 #include "Sophus/so3.hpp"
 
@@ -79,6 +82,9 @@ private:
     std::map<int, data_ptr7> ndiData7;  //port name -> port value
     void updateFrame(const cv::Mat &);
     void updatePose(const std::map<int, data_ptr7>);
+    // 进度条
+    QLabel *progressLabel;
+    QProgressBar *progressBar;
     // ndi显示
     bool ndiActivated0 = false;
     bool ndiActivated1 = false;
@@ -97,7 +103,8 @@ private:
     //多线程
     Worker_ComInit *worker_cominit;
 
-
+private slots:
+    void progressUpdate(int progress, const std::string &status);
 
 public slots:
     void onTime();
@@ -109,10 +116,6 @@ public slots:
     void onExport_PbClick();
     void onExport_PbSocketClick();
     void onPbShowSaveClick();
-    void onNDI_Cb0Click();  // 复选框
-    void onNDI_Cb1Click();
-    void onNDI_Cb2Click();
-    void onNDI_Cb3Click();
 };
 
 

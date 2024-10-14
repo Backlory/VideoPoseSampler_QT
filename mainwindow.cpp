@@ -1,6 +1,9 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
+#define _MAJOR_VERSION_ "1"
+#define _MINOR_VERSION_ "3"
+#define _PATCH_VERSION_ "0"
 
 
 MainWindow::MainWindow(QWidget *parent, QString address, int port, QString saveDir, QStringList roiValues, QStringList sizeValues)
@@ -8,7 +11,7 @@ MainWindow::MainWindow(QWidget *parent, QString address, int port, QString saveD
     , ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
-
+    this->setWindowTitle(QString("VPS: VideoPoseSampler[" _MAJOR_VERSION_ "." _MINOR_VERSION_ "." _PATCH_VERSION_ "]"));
 
     // instantiation
     timer = new QTimer(this);
@@ -25,6 +28,7 @@ MainWindow::MainWindow(QWidget *parent, QString address, int port, QString saveD
     
     opcvFrmImpl = &OpenCVFrame::GetInstance();
     ndiImpl = &NDIModule::GetInstance();
+
     // socket
     this->sock_address = address.isEmpty()?"127.0.0.1" : address;
     this->sock_port = port == 0? 8998 : port;
@@ -64,6 +68,23 @@ MainWindow::MainWindow(QWidget *parent, QString address, int port, QString saveD
             this->frameWidth = -1;
         }
     }
+    // progress
+    QSizePolicy sizePolicy2(QSizePolicy::Ignored, QSizePolicy::Ignored);
+    sizePolicy2.setHorizontalStretch(2);
+    sizePolicy2.setVerticalStretch(0);
+
+    progressBar = new QProgressBar(this);
+    progressBar->setMinimum(0);
+    progressBar->setMaximum(100);
+    progressBar->setSizePolicy(sizePolicy2);
+    progressBar->setVisible(false);
+    ui->statusbar->addWidget(progressBar);
+
+    progressLabel = new QLabel(this);
+    progressLabel->setSizePolicy(sizePolicy2);
+    progressLabel->setText("Ready.");
+    ui->statusbar->addWidget(progressLabel);
+
 
     // connect
     connect(timer, &QTimer::timeout, this, &MainWindow::onTime);
@@ -78,11 +99,7 @@ MainWindow::MainWindow(QWidget *parent, QString address, int port, QString saveD
     connect(ui->Export_Pb, &QPushButton::clicked, this, &MainWindow::onExport_PbClick);
     connect(ui->Export_PbSocket, &QPushButton::clicked, this, &MainWindow::onExport_PbSocketClick);
 
-
-    connect(ui->NDI_Cb0, &QPushButton::clicked, this, &MainWindow::onNDI_Cb0Click);
-    connect(ui->NDI_Cb1, &QPushButton::clicked, this, &MainWindow::onNDI_Cb1Click);
-    connect(ui->NDI_Cb2, &QPushButton::clicked, this, &MainWindow::onNDI_Cb2Click);
-    connect(ui->NDI_Cb3, &QPushButton::clicked, this, &MainWindow::onNDI_Cb3Click);
+    connect(ndiImpl, &NDIModule::progressUpdate, this, &MainWindow::progressUpdate);
 
     // standby
     this->worker_cominit = new Worker_ComInit(ui->ComD_ListView, this->modelCom, this->comDetImpl);
@@ -99,6 +116,21 @@ MainWindow::~MainWindow()
 }
 
 // ==================== ui交互部分 ============================================//
+/*
+更新进度条。
+*/
+void MainWindow::progressUpdate(int progress, const std::string &status){
+    qDebug()<< progress <<" "<< status;
+    progressLabel->setText(QString(status.c_str()));
+    if (progress == 100){
+        progressBar->setVisible(false);
+    }
+    else {
+        progressBar->setValue(progress);
+        progressBar->setVisible(true);
+    }
+}
+
 /*
     * 更新画面
     * @param frame: 画面帧
@@ -125,19 +157,19 @@ QString pose2str(QuatTransformationStruct * m){
 }
 
 void MainWindow::updatePose(const std::map<int, data_ptr7> poseMap){
-    if (this->ndiActivated0 && this->ndiHandle[0]>0){
+    if (this->ndiHandle[0]>0){
         auto m = poseMap.at(this->ndiHandle[0]);
         ui->NDI_LableOut0->setText(pose2str(m.get()));
     }
-    if (this->ndiActivated1 && this->ndiHandle[1]>0){
+    if (this->ndiHandle[1]>0){
         auto m = poseMap.at(this->ndiHandle[1]);
         ui->NDI_LableOut1->setText(pose2str(m.get()));
     }
-    if (this->ndiActivated2 && this->ndiHandle[2]>0){
+    if (this->ndiHandle[2]>0){
         auto m = poseMap.at(this->ndiHandle[2]);
         ui->NDI_LableOut2->setText(pose2str(m.get()));
     }
-    if (this->ndiActivated3 && this->ndiHandle[3]>0){
+    if (this->ndiHandle[3]>0){
         auto m = poseMap.at(this->ndiHandle[3]);
         ui->NDI_LableOut3->setText("NDI0: \n" + pose2str(m.get()));
     }
@@ -205,7 +237,6 @@ void MainWindow::onTime(){
 
     // 数据导出
     if (this->onExportingLocal || this->onExportingSocket) {
-
         this->ui->NDI_LableType0->setText("导出类型：7");
         this->ui->NDI_LableType1->setText("导出类型：7");
         this->ui->NDI_LableType2->setText("导出类型：7");
@@ -265,13 +296,14 @@ void MainWindow::onCamD_PbConnectClick(){
         this->onRunning = true;
         this->timer->start(25); // Max FPS = 40
         this->ui->Export_PbRunPause->setText("暂停");
+        this->ui->Export_Pb->setEnabled(true);
     }
 }
 
 
 // ======02 export 相关交互 ======
 void MainWindow::onExport_PbRunPauseClick(){
-    if (this->timer->isActive()){
+    if (this->onRunning == true){
         this->onRunning = false;
         this->timer->stop();
         this->ui->Export_PbRunPause->setText("启动");
@@ -323,13 +355,18 @@ void MainWindow::onExport_PbSocketClick() {
                 QLineEdit::Normal, this->sock_address + ":" + QString::number(this->sock_port), &bOK);
             if (bOK)
             {
+                this->progressUpdate(0, "解析IP地址和端口...");
                 std::string ip = address.split(":").at(0).toStdString();
                 int port = address.split(":").at(1).toInt();
                 this->ui->Export_PbSocket->setText("建立服务器...");
                 QApplication::processEvents();
+
+
+                this->progressUpdate(70, "等待TCP连接中...");
                 if(this->exptImpl->SocketInit(ip, port)){
                     this->onExportingSocket = true;
                     this->ui->Export_PbSocket->setText("关闭采集服务器");
+                    this->progressUpdate(100, "连接成功。");
                     //
                     if(!this->onExportingLocal){  //确保都关闭才重置
                         this->exptIdx = 0;
@@ -339,9 +376,13 @@ void MainWindow::onExport_PbSocketClick() {
                     this->ui->Export_PbSocket->setText("启动采集服务器");
                     QMessageBox::warning(this, "错误", "无法启动服务器"+address);
                     this->exptImpl->SocketClose();
+                    this->progressUpdate(100, "连接失败。");
                 }
             }
         }
+    }
+    else {
+        QMessageBox::warning(this, "错误", "请先点击\"启动\"以运行采集进程，再启动采集服务器！");
     }
 }
 
@@ -385,18 +426,25 @@ void MainWindow::onComD_PbResetClick(){
     }
     // 清空
 
+
     // 关闭端口
+    this->progressUpdate(25, "正在终止数据采集进程...");
+    this->ndiImpl->StopTracking();
+    this->progressUpdate(50, "正在关闭现有的串行连接...");
     this->ndiImpl->Close();
     ui->ComD_Label->setText("当前端口: 关闭");
 
     // 检查端口列表
+    this->progressUpdate(75, "正在重新扫描所有可用串行端口...");
     modelCom->clear();
-    QStandardItem *item = new QStandardItem("正在检查端口...");
+    QStandardItem *item = new QStandardItem("正在检查串行端口...");
     modelCom->appendRow(item);
     ui->ComD_ListView->setModel(modelCom);
     QApplication::processEvents();
     // 加载到列表
     this->worker_cominit->start();
+
+    this->progressUpdate(100, "串行端口重置完毕。");
     return;
 }
 
@@ -421,11 +469,6 @@ void MainWindow::onCamD_PbChangeRClick(){
 }
 
 void MainWindow::onComD_PbConnectClick(){
-    //清空
-    if(this->ui->NDI_Cb0->isChecked()){this->ui->NDI_Cb0->click();}
-    if(this->ui->NDI_Cb1->isChecked()){this->ui->NDI_Cb1->click();}
-    if(this->ui->NDI_Cb2->isChecked()){this->ui->NDI_Cb2->click();}
-    if(this->ui->NDI_Cb3->isChecked()){this->ui->NDI_Cb3->click();}
     // 关闭电磁定位
     if (this->ndiImpl->isOpened()){
         this->ndiImpl->Close();
@@ -433,42 +476,59 @@ void MainWindow::onComD_PbConnectClick(){
     // 读取
     std::string comName = ui->ComD_ListView->currentIndex().data().toString().toStdString();
     this->comDetImpl->activateCOM(comName);
+
     try {
         ndiImpl->Initialize(true, this->comDetImpl->getActivateCOM());
+    }
+    catch (std::runtime_error &e) {
+        this->progressUpdate(100, "NDI Aurora设备初始化失败。");
+        QMessageBox::warning(this, "初始化时发生的错误", QString::fromStdString(e.what()));
+        return;
+    }
+
+    try {
         ndiImpl->Open();
         this->ndiHandle = this->ndiImpl->getHandlers();
         assert(ndiHandle.size() == 4);
     }
     catch (std::runtime_error &e) {
-        QMessageBox::warning(this, "错误", QString::fromStdString(e.what()));
+        QMessageBox::warning(this, "启动跟踪时发生的错误", QString::fromStdString(e.what()));
         return;
     }
+
     // ui更新
     if (this->ndiHandle[0]>0) {
         this->ui->NDI_LableState0->setText("状态：connected");
-        this->ui->NDI_Cb0->click();
     }
-    else
-    {this->ui->NDI_LableState0->setText("状态：disconnected");}
+    else {
+        this->ui->NDI_LableState0->setText("状态：disconnected");
+    }
     if (this->ndiHandle[1]>0) {
         this->ui->NDI_LableState1->setText("状态：connected");
-        this->ui->NDI_Cb1->click();
     }
-    else
-    {this->ui->NDI_LableState1->setText("状态：disconnected");}
+    else {
+        this->ui->NDI_LableState1->setText("状态：disconnected");
+    }
     if (this->ndiHandle[2]>0) {
         this->ui->NDI_LableState2->setText("状态：connected");
-        this->ui->NDI_Cb2->click();
     }
-    else
-    {this->ui->NDI_LableState2->setText("状态：disconnected");}
+    else {
+        this->ui->NDI_LableState2->setText("状态：disconnected");
+    }
     if (this->ndiHandle[3]>0) {
         this->ui->NDI_LableState3->setText("状态：connected");
-        this->ui->NDI_Cb3->click();
     }
-    else
-    {this->ui->NDI_LableState3->setText("状态：disconnected");}
-    this->ui->ComD_PbConnect->setEnabled(false);
+    else {
+        this->ui->NDI_LableState3->setText("状态：disconnected");
+    }
+
+    // 显示
+    if (this->onRunning == false){
+        this->onRunning = true;
+        this->timer->start(25); // Max FPS = 40
+        this->ui->Export_PbRunPause->setText("暂停");
+        this->ui->Export_Pb->setEnabled(true);
+    }
 }
 
 void MainWindow::onPbShowSaveClick(){
@@ -477,16 +537,4 @@ void MainWindow::onPbShowSaveClick(){
     return;
 }
 
-// ====== 04 NDI 交互 ======
-void MainWindow::onNDI_Cb0Click(){
-    this->ndiActivated0 = ui->NDI_Cb0->isChecked();
-}
-void MainWindow::onNDI_Cb1Click(){
-    this->ndiActivated1 = ui->NDI_Cb1->isChecked();
-}
-void MainWindow::onNDI_Cb2Click(){
-    this->ndiActivated2 = ui->NDI_Cb2->isChecked();
-}
-void MainWindow::onNDI_Cb3Click(){
-    this->ndiActivated3 = ui->NDI_Cb3->isChecked();
-}
+

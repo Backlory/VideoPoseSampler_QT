@@ -1,16 +1,21 @@
 #ifndef NDIMODULE_H
 #define NDIMODULE_H
 
+#include <QObject>
+#include<QDebug>
 #include <vector>
 #include "Sophus/so3.hpp"
 #include "../3rdparty/Aurora/INIFileRW.h"
 #include "../3rdparty/Aurora/CommandHandling.h" // 在Sophus后导入
 #include <boost/thread.hpp>
 #include <Eigen/Dense>
+#include <iostream>
 
 
 
-class NDIModule {
+
+class NDIModule:public QObject {
+    Q_OBJECT
     using data_ptr7 = std::shared_ptr<QuatTransformationStruct>;
 
 public:
@@ -23,6 +28,8 @@ public:
         NdiUnTracking = NdiActvied,
         NdiTracking,
     } State_t; // NDI状态编码，包括关闭、重置、激活、未跟踪、跟踪
+signals:
+    void progressUpdate(int progress, const std::string &status);
 
 public:
     static NDIModule& GetInstance()
@@ -32,7 +39,8 @@ public:
     }
     bool Initialize(bool forceReset = false, int comPort = -1);
     bool Open();
-    bool Close();
+    bool StopTracking();  //这里是，停止查询，但不关闭链接
+    bool Close(); // 这里是关闭串口链接
     bool isOpened();
 
     std::vector<int> getHandlers() const;
@@ -52,6 +60,7 @@ private:
     std::atomic<State_t> m_state = { NdiClosed };
     std::map<int, data_ptr7> m_data; // 10:xx
     mutable std::mutex m_lock;
+    int comPort;
 
     std::vector<int> handles;
 };

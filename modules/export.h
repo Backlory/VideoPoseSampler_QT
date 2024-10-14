@@ -21,8 +21,8 @@ public:
     void createFolder(const QString) const;
 
     template <typename T>
-    void exportData(const int, const cv::Mat,
-                    const std::vector<int>, const std::map<int, T>,
+    void exportData(const int &, const cv::Mat&,
+                    const std::vector<int>&, const std::map<int, T>&,
                     QString, QString) const;
 
 
@@ -30,8 +30,8 @@ public:
     bool SocketInit(std::string adddress = "127.0.0.1", int port = 2345);
     bool SocketClose();
     template <typename T>
-    int exportSocketData(const int, const cv::Mat,
-                          const std::vector<int>, const std::map<int, T>,
+    int exportSocketData(const int &, const cv::Mat &,
+                          const std::vector<int> &, const std::map<int, T> &,
                           QString) const;
 
 private:
@@ -60,11 +60,11 @@ void ndiData2QString(const T data, QString &);
 
 
 template <typename T>
-void Export::exportData(const int frameIndex, const cv::Mat frame,
-                        const std::vector<int> ndiHandle, const std::map<int, T> ndiData, \
+void Export::exportData(const int &frameIndex, const cv::Mat &frame,
+                        const std::vector<int> &ndiHandle, const std::map<int, T> &ndiData, \
                         QString timeStamp, QString savePath) const {
     //assert(ndiHandle.size() == 4);
-    exportThread<T>(frameIndex, frame, ndiHandle, ndiData, timeStamp, savePath);
+    //exportThread<T>(frameIndex, frame, ndiHandle, ndiData, timeStamp, savePath);
     boost::thread td(&Export::exportThread<T>, this, frameIndex, frame, ndiHandle, ndiData, timeStamp, savePath);
 }
 
@@ -130,8 +130,8 @@ void Export::savePoseWithTimeStamp(const std::vector<int> ndiHandle, const std::
 }
 
 template <typename T>
-int Export::exportSocketData(const int frameIndex, const cv::Mat frame,
-                      const std::vector<int> ndiHandle, const std::map<int, T> ndiData, \
+int Export::exportSocketData(const int &frameIndex, const cv::Mat &frame,
+                      const std::vector<int> &ndiHandle, const std::map<int, T> &ndiData, \
                       QString timeStamp) const {
     // 检查是否连接中
     if (this->sockClient == INVALID_SOCKET) {
