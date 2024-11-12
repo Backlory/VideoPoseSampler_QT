@@ -114,10 +114,12 @@ bool NDIModule::Initialize(bool forceReset, int comPort) {
     {
         std::lock_guard<std::mutex> _(this->m_lock);
         m_data.clear();
+        m_error.clear();
         for (auto id:this->handles) {
             if (id > 0){
                 auto ptr = std::make_shared<QuatTransformationStruct>();
                 m_data.emplace(id, ptr);
+                m_error.emplace(id, -1);
             }
         }
     }
@@ -202,10 +204,11 @@ std::vector<int> NDIModule::getHandlers() const {
  * NDIModule::getPosition(p);
  * auto out1 = p[h[0]];
  */
-bool NDIModule::getPosition(std::map<int, data_ptr7> &positions) const {
+bool NDIModule::getPosition(std::map<int, data_ptr7> &positions, std::map<int, double> &errs) const {
     {
         std::lock_guard<std::mutex> _(this->m_lock);
         positions = this->m_data;
+        errs = this->m_error;
     }
     return true;
 }
@@ -214,26 +217,32 @@ int NDIModule::running() {
     while (!boost::this_thread::interruption_requested()) {
         try{
             if (this->m_state == NdiTracking) {
+                std::map<int, QuatTransformationStruct> data;
+                std::map<int, double> err;
+                QuatTransformationStruct d_default;
                 if(this->m_aurora->nGetTXTransforms(true)) {
-                    // get data
-                    std::map<int, QuatTransformationStruct> data;
-                    for (auto ite = this->m_data.begin(); ite!= this->m_data.end(); ++ite) {
-                        int i = ite->first;
-                        if (this->m_aurora->m_dtHandleInformation[i].Xfrms.ulFlags == TRANSFORM_VALID) {
-                            QuatTransformationStruct d;
-                            auto& _pos = this->m_aurora->m_dtHandleInformation[i].Xfrms.translation;
-                            auto& _rot = this->m_aurora->m_dtHandleInformation[i].Xfrms.rotation;
-                            d.rotation = _rot;
-                            d.translation = _pos;
-                            data.emplace(i, d);
-                        }
-                        else
-                        {
-                            //throw std::runtime_error("不对啊");
-                            QuatTransformationStruct d;
-                            d.rotation = { 1,0,0,0 };
-                            d.translation = { 0, 0, 0 };
-                            data.emplace(i, d);
+                    {
+                        std::lock_guard<std::mutex> _(this->m_lock);
+                        for (auto ite = this->m_data.begin(); ite!= this->m_data.end(); ++ite) {
+                            int i = ite->first;
+                            if (this->m_aurora->m_dtHandleInformation[i].Xfrms.ulFlags == TRANSFORM_VALID) {
+                                QuatTransformationStruct d;
+                                auto& _pos = this->m_aurora->m_dtHandleInformation[i].Xfrms.translation;
+                                auto& _rot = this->m_aurora->m_dtHandleInformation[i].Xfrms.rotation;
+                                auto _err = this->m_aurora->m_dtHandleInformation[i].Xfrms.fError;
+                                d.rotation = _rot;
+                                d.translation = _pos;
+                                data.emplace(i, d);
+                                err.emplace(i, _err);
+                                ;
+                            }
+                            else
+                            {
+                                d_default.rotation = { 1,0,0,0 };
+                                d_default.translation = { 0, 0, 0 };
+                                data.emplace(i, d_default);
+                                err.emplace(i, -1);
+                            }
                         }
                     }
                     //to ensure all value in m_data are sampled at the same time.
@@ -241,6 +250,9 @@ int NDIModule::running() {
                         std::lock_guard<std::mutex> _(this->m_lock);
                         for (auto& d : data) {
                             this->m_data.at(d.first) = std::make_shared<QuatTransformationStruct>(d.second);
+                        }
+                        for (auto& d : err) {
+                            this->m_error.at(d.first) = d.second;
                         }
                     }
                 }

@@ -3,7 +3,7 @@
 
 #define _MAJOR_VERSION_ "1"
 #define _MINOR_VERSION_ "3"
-#define _PATCH_VERSION_ "0"
+#define _PATCH_VERSION_ "1"
 
 
 MainWindow::MainWindow(QWidget *parent, QString address, int port, QString saveDir, QStringList roiValues, QStringList sizeValues)
@@ -144,7 +144,7 @@ void MainWindow::updateFrame(const cv::Mat & frame){
     QApplication::processEvents();
 }
 
-QString pose2str(QuatTransformationStruct * m){
+QString pose2str(QuatTransformationStruct * m, const double mErr){
     QString str;
     str += "x:" + QString::number(m->translation.x) + "\n";
     str += "y:" + QString::number(m->translation.y) + "\n";
@@ -152,50 +152,33 @@ QString pose2str(QuatTransformationStruct * m){
     str += "q0:" + QString::number(m->rotation.q0) + "\n";
     str += "qx:" + QString::number(m->rotation.qx) + "\n";
     str += "qy:" + QString::number(m->rotation.qy) + "\n";
-    str += "qz:" + QString::number(m->rotation.qz);
+    str += "qz:" + QString::number(m->rotation.qz) + "\n";
+    str += "Error index:" + QString::number(mErr);
     return str;
 }
 
-void MainWindow::updatePose(const std::map<int, data_ptr7> poseMap){
+void MainWindow::updatePose(const std::map<int, data_ptr7> poseMap, std::map<int, double> poseMapErr){
+    qDebug() << 0 << this->ndiHandle;
     if (this->ndiHandle[0]>0){
-        auto m = poseMap.at(this->ndiHandle[0]);
-        ui->NDI_LableOut0->setText(pose2str(m.get()));
+        auto m = poseMap.at(this->ndiHandle[0]); //data_ptr7, 需要get()
+        auto mErr = poseMapErr.at(this->ndiHandle[0]); //double
+        ui->NDI_LableOut0->setText(pose2str(m.get(), mErr));
     }
     if (this->ndiHandle[1]>0){
         auto m = poseMap.at(this->ndiHandle[1]);
-        ui->NDI_LableOut1->setText(pose2str(m.get()));
+        auto mErr = poseMapErr.at(this->ndiHandle[1]);
+        ui->NDI_LableOut1->setText(pose2str(m.get(), mErr));
     }
     if (this->ndiHandle[2]>0){
         auto m = poseMap.at(this->ndiHandle[2]);
-        ui->NDI_LableOut2->setText(pose2str(m.get()));
+        auto mErr = poseMapErr.at(this->ndiHandle[2]);
+        ui->NDI_LableOut2->setText(pose2str(m.get(), mErr));
     }
     if (this->ndiHandle[3]>0){
         auto m = poseMap.at(this->ndiHandle[3]);
-        ui->NDI_LableOut3->setText("NDI0: \n" + pose2str(m.get()));
+        auto mErr = poseMapErr.at(this->ndiHandle[3]);
+        ui->NDI_LableOut3->setText("NDI0: \n" + pose2str(m.get(), mErr));
     }
-}
-
-QString pose2str(Eigen::Matrix4d * m){
-    QString str;
-    auto i2s = [&m](int i, int j){return QString::number((*m)(i,j));};
-    str += "T=" + i2s(0,3) + ", " + i2s(1,3) + ", " + i2s(2,3) + "\n";
-    str += "R=" + i2s(0,0) + ", " + i2s(0,1) + ", " + i2s(0,2) + "\n";
-    str += "   " + i2s(1,0) + ", " + i2s(1,1) + ", " + i2s(1,2) + "\n";
-    str += "   " + i2s(2,0) + ", " + i2s(2,1) + ", " + i2s(2,2);
-    return str;
-}
-
-
-QString pose2str(Sophus::Vector6d * m){
-    QString str;
-    auto i2s = [&m](int i){return QString::number((*m)(i));};
-    str += "x:" + i2s(0) + "\n";
-    str += "y:" + i2s(1) + "\n";
-    str += "z:" + i2s(2) + "\n";
-    str += "rx:" + i2s(3) + "\n";
-    str += "ry:" + i2s(4) + "\n";
-    str += "rz:" + i2s(5);
-    return str;
 }
 
 
@@ -217,7 +200,7 @@ void MainWindow::onTime(){
     }
     if (this->ndiImpl->isOpened()){
         this->ndiData7.clear();
-        this->ndiImpl->getPosition(this->ndiData7); //尺寸未知
+        this->ndiImpl->getPosition(this->ndiData7, this->ndiData7Err); //尺寸未知
     }
 
     QString details;
@@ -231,7 +214,7 @@ void MainWindow::onTime(){
 
     // 更新位姿
     if (this->ndiImpl->isOpened()){
-        this->updatePose(this->ndiData7);
+        this->updatePose(this->ndiData7, this->ndiData7Err);
         details += "电磁定位输出类型：7\n";
     }
 

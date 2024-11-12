@@ -80,8 +80,9 @@ private:
     int frameHeight, frameWidth;
     std::vector<int> ndiHandle;  //idx->port name, size == 4
     std::map<int, data_ptr7> ndiData7;  //port name -> port value
+    std::map<int, double> ndiData7Err;  //port name -> port value
     void updateFrame(const cv::Mat &);
-    void updatePose(const std::map<int, data_ptr7>);
+    void updatePose(const std::map<int, data_ptr7>, const std::map<int, double>);
     // 进度条
     QLabel *progressLabel;
     QProgressBar *progressBar;

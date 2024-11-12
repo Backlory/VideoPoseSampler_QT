@@ -17,12 +17,12 @@ INCLUDEPATH += \
 
 CONFIG(debug, debug|release) {
     LIBS += \
-         ../3rdparty/Boost/lib/*-mt-gd-x64-1_74.lib\
-         ../3rdparty/OpenCV/x64/vc15/lib/opencv_world450d.lib
+         ./../3rdparty/Boost/lib/*-mt-gd-x64-1_74.lib\
+         ./../3rdparty/OpenCV/x64/vc15/lib/opencv_world450d.lib
 }else{
     LIBS += \
-        ../3rdparty/OpenCV/x64/vc15/lib/opencv_world450.lib \
-        ../3rdparty/Boost/lib/*-mt-x64-1_74.lib
+        ./../3rdparty/OpenCV/x64/vc15/lib/opencv_world450.lib \
+        ./../3rdparty/Boost/lib/*-mt-x64-1_74.lib
 }
 
 
