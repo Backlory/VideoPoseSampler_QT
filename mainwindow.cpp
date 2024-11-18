@@ -3,7 +3,7 @@
 
 #define _MAJOR_VERSION_ "1"
 #define _MINOR_VERSION_ "3"
-#define _PATCH_VERSION_ "1"
+#define _PATCH_VERSION_ "2"
 
 
 MainWindow::MainWindow(QWidget *parent, QString address, int port, QString saveDir, QStringList roiValues, QStringList sizeValues)
@@ -118,6 +118,7 @@ MainWindow::~MainWindow()
 // ==================== ui交互部分 ============================================//
 /*
 更新进度条。
+progress 为 100时，隐藏进度条。
 */
 void MainWindow::progressUpdate(int progress, const std::string &status){
     qDebug()<< progress <<" "<< status;
@@ -230,17 +231,17 @@ void MainWindow::onTime(){
                     TimeStampImpl->getTimeStamp(), exptFolderPath);
         }
         if (this->onExportingSocket){
-            auto m = this->exptImpl->exportSocketData(exptIdx, cvframe,
+            int m = this->exptImpl->exportSocketData(exptIdx, cvframe,
                                                       ndiHandle, ndiData7,
                                                       TimeStampImpl->getTimeStamp());
             if(m > 0) {
-                QMessageBox::warning(this, "错误", "客户端连接中断，错误代码="+QString::number(m));
-                this->ui->Export_PbSocket->click();
-                // 1-连接断开
-                // 2-获取get失败
-                // 3-发送
+                this->progressUpdate(100, "客户端连接中断，错误代码="+ std::to_string(m));
+                //QMessage询问是否断开连接
+                int ret = QMessageBox::question(this, "错误", "客户端连接中断，错误代码="+QString::number(m)+"\n是否要断开TCP连接？", QMessageBox::Yes | QMessageBox::No, QMessageBox::Yes);
+                if (ret == QMessageBox::Yes) {
+                    this->ui->Export_PbSocket->click();
+                }
             }
-
         }
         details += "正在本地导出:" + QString(this->onExportingLocal?"true":"false") + "\n";
         details += "正在端口导出:" + QString(this->onExportingSocket?"true":"false") + "\n";
@@ -344,7 +345,6 @@ void MainWindow::onExport_PbSocketClick() {
                 this->ui->Export_PbSocket->setText("建立服务器...");
                 QApplication::processEvents();
 
-
                 this->progressUpdate(70, "等待TCP连接中...");
                 if(this->exptImpl->SocketInit(ip, port)){
                     this->onExportingSocket = true;
@@ -432,18 +432,23 @@ void MainWindow::onComD_PbResetClick(){
 }
 
 void MainWindow::onCamD_PbChangeRClick(){
+    // 如果正在运行，点击Export_PbRunPause
+    if (this->onRunning == true){
+        this->ui->Export_PbRunPause->click();
+    }
     //若已指定则询问是否更改
     if (this->clipROI.width > 0){
         int ret = QMessageBox::question(this, "更改ROI", "警告：已经有来自参数的ROI可用。强行更改ROI可能导致尺度因子标定失效。\n是否更改ROI？", QMessageBox::Yes | QMessageBox::No, QMessageBox::No);
         if (ret == QMessageBox::No) return;
     }
     if (opcvFrmImpl->isOpened()){
-        bool bOK = false;
-        int height = QInputDialog::getInt(this, "高度", "请输入视频流高度", 1080, 0, 10000, 1, &bOK);
-        if (!bOK) return;
-        int width = QInputDialog::getInt(this, "宽度", "请输入视频流宽度", 1920, 0, 10000, 1, &bOK);
-        if (!bOK) return;
-        opcvFrmImpl->changeSize(height, width);
+        int height, width;
+        auto dialog = selectResolution(this);
+        dialog.setModal(true);
+        if (dialog.exec() == QDialog::Accepted){
+            dialog.getResolution(width, height);
+            opcvFrmImpl->changeSize(height, width);
+        }
     }
     else{
         QMessageBox::warning(this, "错误", "请先连接相机!");
@@ -458,7 +463,19 @@ void MainWindow::onComD_PbConnectClick(){
     }
     // 读取
     std::string comName = ui->ComD_ListView->currentIndex().data().toString().toStdString();
-    this->comDetImpl->activateCOM(comName);
+    if (comName == "" || comName == "正在检查串行端口..."){
+        bool bOK = false;
+        int comIndex = QInputDialog::getInt(this, "串口索引", "请输入串口号(数字)", 0, 4, 100, 1, &bOK);
+        if (!bOK){
+            return;
+        }
+        comName = "COM" + std::to_string(comIndex);
+        this->progressUpdate(100, "手动输入了串口号："+comName);
+        this->comDetImpl->activateCOM(comName);
+    }
+    else {
+        this->comDetImpl->activateCOM(comName);
+    }
 
     try {
         ndiImpl->Initialize(true, this->comDetImpl->getActivateCOM());

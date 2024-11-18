@@ -1,11 +1,13 @@
 #ifndef EXPORT_H
 #define EXPORT_H
 
+#define CHUNK_SIZE 204800
+
 #include <QString>
 #include <QDir>
 
 #include <WinSock2.h>
-
+#include <QDebug>
 #include "../3rdparty/Aurora/APIStructures.h"
 #include "opencv2/opencv.hpp"
 #include "Sophus/so3.hpp"
@@ -137,30 +139,20 @@ int Export::exportSocketData(const int &frameIndex, const cv::Mat &frame,
     if (this->sockClient == INVALID_SOCKET) {
         return false;
     }
-    //图像压缩
-    std::vector<uchar> data_encode;
-    std::string binary_data;
-    if(!frame.empty()) {
-        cv::imencode(".jpg", frame, data_encode);
-        binary_data = std::string(data_encode.begin(), data_encode.end());
-    }
-    else {
-        binary_data = "abcdef";
-    }
 
-    // 数据打包
-    std::string message;
-    //
+    // ===================================
+    // 文本数据
+    std::string msg_part1;
     QString temp;
-    message += "{\n";
-    message += "\"TimeStamp\": \"" + timeStamp.toStdString() + "\",\n";
-    message += "\"Poses\" : \n";
-        message += "\t{\n";
+    msg_part1 += "{\n";
+    msg_part1 += "\"TimeStamp\": \"" + timeStamp.toStdString() + "\",\n";
+    msg_part1 += "\"Poses\" : \n";
+        msg_part1 += "\t{\n";
         if (ndiHandle.empty()) {
-            message += "\t\"0\": [-1],\n";
-            message += "\t\"1\": [-1],\n";
-            message += "\t\"2\": [-1],\n";
-            message += "\t\"3\": [-1]\n";
+            msg_part1 += "\t\"0\": [-1],\n";
+            msg_part1 += "\t\"1\": [-1],\n";
+            msg_part1 += "\t\"2\": [-1],\n";
+            msg_part1 += "\t\"3\": [-1]\n";
         }
         else{
             for(int i=0; i<4;i++){
@@ -172,57 +164,81 @@ int Export::exportSocketData(const int &frameIndex, const cv::Mat &frame,
                 else{
                         temp = "[-1]";
                 }
-                message += "\t\"" + std::to_string(i) +"\":" + temp.toStdString();
+                msg_part1 += "\t\"" + std::to_string(i) +"\":" + temp.toStdString();
                 if (i == 3)
-                        message += "\n";
+                        msg_part1 += "\n";
                 else
-                        message += ",\n";
+                        msg_part1 += ",\n";
             }
         }
-        message += "\t}\n";
-    message += "} \n";
-    // 尺寸
-    std::string sizeJson = std::to_string(message.size());
-    int size = sizeJson.size();
+        msg_part1 += "\t}\n";
+    msg_part1 += "} \n";
+    //图像数据
+    std::vector<uchar> data_encode;
+    std::string msg_part2;
+    if(!frame.empty()) {
+        cv::imencode(".jpg", frame, data_encode);
+        msg_part2 = std::string(data_encode.begin(), data_encode.end());
+    }
+    else {
+        msg_part2 = "abcdef";
+    }
+    
+    // ===================================
+    // 数据打包
+    std::string sizePart1 = std::to_string(msg_part1.size());
+    int size = sizePart1.size();
     for (int i = 0; i < 16 - size; i++) {
-            sizeJson = "0" + sizeJson;
+            sizePart1 = "0" + sizePart1;
     }
-    std::string sizeFrame = std::to_string(binary_data.size());
-    int size2 = sizeFrame.size();
+    std::string sizePart2 = std::to_string(msg_part2.size());
+    int size2 = sizePart2.size();
     for (int i = 0; i < 16 - size2; i++) {
-            sizeFrame = "0" + sizeFrame;
+            sizePart2 = "0" + sizePart2;
     }
-    message = sizeJson + sizeFrame + message + binary_data;
 
-    // 发送、确认收到
-    if (message.size() < 200*1024){
-        // 先准备接受
-        char recvBuf[10] = {};
-            if (recv(this->sockClient, recvBuf, 10, 0) == -1) {
-            return 1;
-        }
-        std::string recvMsg(recvBuf);
-        if (recvMsg.compare("get") != 0) {
-            return 2;
-        }
-
-        // 发送
-        if (send(this->sockClient, message.c_str(), message.size(), 0) == -1) {
-            return 3;
-        }
-//        // 再接受
-//        char recvBuf2[35] = {};
-//        if (recv(this->sockClient, recvBuf2, 35, 0) == -1) {
-//            return 4;
-//        }
-//        std::string expectedResponse = "OK" + sizeJson + sizeFrame;
-//        std::string actualResponse(recvBuf2);
-//        if (actualResponse.compare(expectedResponse) != 0) {
-//            return 5;
-//        }
-        return -1;
+    //第一次接收：get
+    char recvBuf[10] = {}; //接收
+    if (recv(this->sockClient, recvBuf, 10, 0) <= 0) {
+        qDebug() << "接收失败";
+        return 1;  // 接收失败
     }
+    std::string recvMsg(recvBuf); //转换
+    if (recvMsg.compare("get") != 0) {
+        qDebug() << "接收失败，所发送消息不是get";
+        return 2;  // 接收失败，不是get
+    }
+
+    //第一次发送：size信号+msg_part1, 长度需<256
+    std::string msg_Sizep1_Sizep2_P1 = sizePart1 + sizePart2 + msg_part1;
+    int size_ = msg_Sizep1_Sizep2_P1.size();
+    if (send(this->sockClient, msg_Sizep1_Sizep2_P1.c_str(), msg_Sizep1_Sizep2_P1.size(), 0) == -1) {
+        qDebug() << "第一次发送失败";
+        return 3;  // 发送失败
+    }
+
+    // 第二次发送
+    size_t size2_ = msg_part2.size();
+    size_t numChunks = (size2_ + CHUNK_SIZE - 1) / CHUNK_SIZE; //分包
+    for (size_t i = 0; i < numChunks - 1; ++i){
+        size_t start = i * CHUNK_SIZE;
+        if (send(this->sockClient, msg_part2.data() + start, CHUNK_SIZE, 0) == -1) {
+            qDebug() << "第二次发送失败(chunk错误)";
+            return 4;  // 发送包失败
+        }
+    }
+    // 将最后一个包补全到chunk_size
+    size_t start = (numChunks - 1) * CHUNK_SIZE;
+    for (size_t i = 0; i < CHUNK_SIZE - (size2_ - start); ++i){
+        msg_part2 += "0";
+    }
+    if (send(this->sockClient, msg_part2.data() + start, CHUNK_SIZE, 0) == -1) {
+        qDebug() << "第二次发送失败(chunk错误_end)";
+        return 4;  // 发送包失败
+    }
+
     return -1;
 }
+
 
 #endif // EXPORT_H

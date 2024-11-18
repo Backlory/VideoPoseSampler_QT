@@ -2,7 +2,7 @@
  * @Author: backlory's desktop dbdx_liyaning@126.com
  * @Date: 2024-03-16 13:24:52
  * @LastEditors: backlory's desktop dbdx_liyaning@126.com
- * @LastEditTime: 2024-04-01 18:47:54
+ * @LastEditTime: 2024-11-18 18:11:03
  * @Description: 
  * Copyright (c) 2024 by Backlory, (email: dbdx_liyaning@126.com), All Rights Reserved.
  */
@@ -62,8 +62,10 @@ bool Export::SocketInit(std::string adddress , int port){
     
     int nRecvBuf = 1024; //设置为1K
     setsockopt(this->sockServer, SOL_SOCKET, SO_RCVBUF, (const char*)&nRecvBuf, sizeof(int));
-    int nSendBuf = 200 * 1024; //设置为200K
+    int nSendBuf = CHUNK_SIZE; //设置缓冲区
     setsockopt(this->sockServer, SOL_SOCKET, SO_SNDBUF, (const char*)&nSendBuf, sizeof(int));
+    //int bNoDelay = 1; //NODELAY 模式
+    //setsockopt(this->sockServer, IPPROTO_TCP, TCP_NODELAY, (const char*)&bNoDelay, sizeof(int));
     //struct timeval nNetTimeout;
     //nNetTimeout.tv_sec = 5;  // 等待10秒
     //nNetTimeout.tv_usec = 0;
@@ -81,9 +83,6 @@ bool Export::SocketInit(std::string adddress , int port){
             WSACleanup();
     }
     
-
-
-
     char recvBuf[100];
     if (recv(this->sockClient, recvBuf, sizeof(recvBuf), 0) == -1) {
         return false;
@@ -97,42 +96,6 @@ bool Export::SocketInit(std::string adddress , int port){
         return false;
     }
     return true;
-    
-    /*-------------------------------创建socket-----------------------------------*/
-    /*
-    memset(&this->addrServer, 0, sizeof(this->addrServer));  //每个字节都用0填充
-    this->sockClient = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP); // SOCK_STREAM为TCP流式套接字，SOCK_DGRAM为UDP数据报套接字
-    this->addrServer.sin_addr.S_un.S_addr = inet_addr(adddress.c_str());
-    this->addrServer.sin_family = AF_INET;
-    this->addrServer.sin_port = htons(port);
-    int nRecvBuf = 1024; //设置为1K
-    setsockopt(this->sockClient, SOL_SOCKET, SO_RCVBUF, (const char*)&nRecvBuf, sizeof(int));
-    int nSendBuf = 200 * 1024; //设置为200K
-    setsockopt(this->sockClient, SOL_SOCKET, SO_SNDBUF, (const char*)&nSendBuf, sizeof(int));
-    connect(this->sockClient, (SOCKADDR*)&this->addrServer, sizeof(SOCKADDR));
-    */
-   
-    //缓冲区大小
-    //连接
-    
-    // 测试是否连接成功
-    /*
-    std::string sendMsg = "hello";
-    if (send(this->sockClient, sendMsg.c_str(), sendMsg.size() + 1, 0) == -1) {
-        return false;
-    }
-
-    char recvBuf[6];
-    if (recv(this->sockClient, recvBuf, sizeof(recvBuf), 0) == -1) {
-        return false;
-    }
-
-    std::string recvMsg(recvBuf);
-    if (recvMsg.compare("hello") == 0) {
-        return true;
-    } else {
-        return false;
-    }*/
 }
 
 

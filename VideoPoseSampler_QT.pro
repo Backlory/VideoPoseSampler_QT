@@ -43,7 +43,8 @@ SOURCES += \
     modules/highresolutiontime.cpp \
     modules/ndimodule.cpp \
     modules/opencvframe.cpp \
-    modules/timestamp.cpp
+    modules/timestamp.cpp \
+    selectresolution.cpp
 
 HEADERS += \
     ../3rdparty/Aurora/APIStructures.h \
@@ -59,10 +60,12 @@ HEADERS += \
     modules/highresolutiontime.h \
     modules/ndimodule.h \
     modules/opencvframe.h \
-    modules/timestamp.h
+    modules/timestamp.h \
+    selectresolution.h
 
 FORMS += \
-    mainwindow.ui
+    mainwindow.ui \
+    selectresolution.ui
 
 TRANSLATIONS += \
     VideoPoseSampler_QT_zh_CN.ts

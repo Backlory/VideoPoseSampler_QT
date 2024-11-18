@@ -38,7 +38,7 @@ bool NDIModule::Initialize(bool forceReset, int comPort) {
     bool bResetHardware = false;
     ReadINIParm("Communication", "Reset Hardware", "0", &bResetHardware);
 
-    emit progressUpdate(15, "[4/17]读取设置：端口号...");
+    emit progressUpdate(15, "[4/17]读取设置：串口号...");
     int nComPort = 0;
     if (comPort > 0) {
         nComPort = comPort;

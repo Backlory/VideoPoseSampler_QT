@@ -29,6 +29,8 @@
 #include "modules/opencvframe.h"
 #include "modules/timestamp.h"
 
+#include "selectresolution.h"
+
 using data_ptr7 = std::shared_ptr<QuatTransformationStruct>;
 
 QT_BEGIN_NAMESPACE
