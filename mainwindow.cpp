@@ -3,7 +3,7 @@
 
 #define _MAJOR_VERSION_ "1"
 #define _MINOR_VERSION_ "3"
-#define _PATCH_VERSION_ "2"
+#define _PATCH_VERSION_ "3"
 
 
 MainWindow::MainWindow(QWidget *parent, QString address, int port, QString saveDir, QStringList roiValues, QStringList sizeValues)
