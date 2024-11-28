@@ -60,15 +60,13 @@ bool Export::SocketInit(std::string adddress , int port){
     this->addrServer.sin_addr.S_un.S_addr = inet_addr(adddress.c_str());
     bind(this->sockServer, (SOCKADDR*)&this->addrServer, sizeof(SOCKADDR));
     
-    int nRecvBuf = 1024; //设置为1K
+    int nRecvBuf = 1024; //设置为1KB
     setsockopt(this->sockServer, SOL_SOCKET, SO_RCVBUF, (const char*)&nRecvBuf, sizeof(int));
-    int nSendBuf = CHUNK_SIZE; //设置缓冲区
+    int nSendBuf = 512000; //设置发送缓冲区500KB
     setsockopt(this->sockServer, SOL_SOCKET, SO_SNDBUF, (const char*)&nSendBuf, sizeof(int));
-    //int bNoDelay = 1; //NODELAY 模式
-    //setsockopt(this->sockServer, IPPROTO_TCP, TCP_NODELAY, (const char*)&bNoDelay, sizeof(int));
-    //struct timeval nNetTimeout;
-    //nNetTimeout.tv_sec = 5;  // 等待10秒
-    //nNetTimeout.tv_usec = 0;
+    struct timeval nNetTimeout;
+    nNetTimeout.tv_sec = 10;  // 等待10秒
+    nNetTimeout.tv_usec = 0;
     //setsockopt(this->sockServer, SOL_SOCKET, SO_RCVTIMEO, (char*)&nNetTimeout, sizeof(nNetTimeout));
 
     listen(this->sockServer, 2); //监听连接请求
@@ -81,19 +79,6 @@ bool Export::SocketInit(std::string adddress , int port){
             //关闭socket
             closesocket(this->sockServer);
             WSACleanup();
-    }
-    
-    char recvBuf[100];
-    if (recv(this->sockClient, recvBuf, sizeof(recvBuf), 0) == -1) {
-        return false;
-    }
-    std::string recvMsg(recvBuf);
-    if (recvMsg.compare("hellofromclient") != 0) {
-        return false;
-    }
-    std::string sendMsg = "hellofromserver";
-    if (send(this->sockClient, sendMsg.c_str(), sendMsg.size() + 1, 0) == -1) {
-        return false;
     }
     return true;
 }

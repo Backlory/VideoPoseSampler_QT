@@ -1,8 +1,6 @@
 #ifndef EXPORT_H
 #define EXPORT_H
 
-#define CHUNK_SIZE 204800
-
 #include <QString>
 #include <QDir>
 
@@ -130,14 +128,14 @@ void Export::savePoseWithTimeStamp(const std::vector<int> ndiHandle, const std::
         file.close();
     }
 }
-
+/*监听进程*/
 template <typename T>
 int Export::exportSocketData(const int &frameIndex, const cv::Mat &frame,
                       const std::vector<int> &ndiHandle, const std::map<int, T> &ndiData, \
                       QString timeStamp) const {
     // 检查是否连接中
     if (this->sockClient == INVALID_SOCKET) {
-        return false;
+        return 8;
     }
 
     // ===================================
@@ -196,47 +194,37 @@ int Export::exportSocketData(const int &frameIndex, const cv::Mat &frame,
     for (int i = 0; i < 16 - size2; i++) {
             sizePart2 = "0" + sizePart2;
     }
+    if (msg_part2.size() > 512000){
+        return 1; //图片过大
+    }
 
     //第一次接收：get
     char recvBuf[10] = {}; //接收
-    if (recv(this->sockClient, recvBuf, 10, 0) <= 0) {
-        qDebug() << "接收失败";
-        return 1;  // 接收失败
+    if (recv(this->sockClient, recvBuf, 3, 0) <= 0) {
+        qDebug() << "没得到get";
+        return 2;  // 接收失败
     }
-    std::string recvMsg(recvBuf); //转换
-    if (recvMsg.compare("get") != 0) {
-        qDebug() << "接收失败，所发送消息不是get";
+    else if (strncmp(recvBuf, "get", 3) != 0) {
+        qDebug() << "接收失败，所发送消息不是get, 而是" << recvBuf;
         return 2;  // 接收失败，不是get
     }
 
-    //第一次发送：size信号+msg_part1, 长度需<256
+    //第一次发送：size信号+msg_part1, 长度需==256，以K填充
     std::string msg_Sizep1_Sizep2_P1 = sizePart1 + sizePart2 + msg_part1;
     int size_ = msg_Sizep1_Sizep2_P1.size();
-    if (send(this->sockClient, msg_Sizep1_Sizep2_P1.c_str(), msg_Sizep1_Sizep2_P1.size(), 0) == -1) {
+    for (size_t i =0; i < 256 - size_; ++i) {
+        msg_Sizep1_Sizep2_P1 += "k";
+    }
+    if (send(this->sockClient, msg_Sizep1_Sizep2_P1.c_str(), 256, 0) <= 0) {
         qDebug() << "第一次发送失败";
-        return 3;  // 发送失败
+        return 2;  // 发送失败
     }
 
-    // 第二次发送
-    size_t size2_ = msg_part2.size();
-    size_t numChunks = (size2_ + CHUNK_SIZE - 1) / CHUNK_SIZE; //分包
-    for (size_t i = 0; i < numChunks - 1; ++i){
-        size_t start = i * CHUNK_SIZE;
-        if (send(this->sockClient, msg_part2.data() + start, CHUNK_SIZE, 0) == -1) {
-            qDebug() << "第二次发送失败(chunk错误)";
-            return 4;  // 发送包失败
-        }
+    // 第二次发送，长度==sizePart2
+    if (send(this->sockClient, msg_part2.data(), msg_part2.size(), 0) <= 0) {
+            qDebug() << "第二次发送失败";
+            return 2;  // 发送包失败
     }
-    // 将最后一个包补全到chunk_size
-    size_t start = (numChunks - 1) * CHUNK_SIZE;
-    for (size_t i = 0; i < CHUNK_SIZE - (size2_ - start); ++i){
-        msg_part2 += "0";
-    }
-    if (send(this->sockClient, msg_part2.data() + start, CHUNK_SIZE, 0) == -1) {
-        qDebug() << "第二次发送失败(chunk错误_end)";
-        return 4;  // 发送包失败
-    }
-
     return -1;
 }
 

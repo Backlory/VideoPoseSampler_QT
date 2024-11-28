@@ -234,13 +234,13 @@ void MainWindow::onTime(){
             int m = this->exptImpl->exportSocketData(exptIdx, cvframe,
                                                       ndiHandle, ndiData7,
                                                       TimeStampImpl->getTimeStamp());
-            if(m > 0) {
-                this->progressUpdate(100, "客户端连接中断，错误代码="+ std::to_string(m));
+            if(m >= 3) {
+                this->progressUpdate(100, "发生失败，错误代码="+ std::to_string(m));
                 //QMessage询问是否断开连接
-                int ret = QMessageBox::question(this, "错误", "客户端连接中断，错误代码="+QString::number(m)+"\n是否要断开TCP连接？", QMessageBox::Yes | QMessageBox::No, QMessageBox::Yes);
-                if (ret == QMessageBox::Yes) {
-                    this->ui->Export_PbSocket->click();
-                }
+                //int ret = QMessageBox::question(this, "错误", "客户端连接中断，错误代码="+QString::number(m)+"\n是否要断开TCP连接？", QMessageBox::Yes | QMessageBox::No, QMessageBox::Yes);
+                //if (ret == QMessageBox::Yes) {
+                //    this->ui->Export_PbSocket->click();
+                //}
             }
         }
         details += "正在本地导出:" + QString(this->onExportingLocal?"true":"false") + "\n";
