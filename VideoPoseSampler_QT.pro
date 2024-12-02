@@ -13,18 +13,39 @@ INCLUDEPATH += \
     ../3rdparty/Boost/include/boost-1_73 \
     ../3rdparty/eigen/include/eigen3 \
     ../3rdparty/sophus \
-    ../3rdparty/fmt-7.1.3/include
+    ../3rdparty/fmt-7.1.3/include \
+    ../3rdparty/OpenIGTLink/include/igtl/igtlutil \
+    ../3rdparty/OpenIGTLink/include/igtl
 
 CONFIG(debug, debug|release) {
     LIBS += \
          ./../3rdparty/Boost/lib/*-mt-gd-x64-1_74.lib\
          ./../3rdparty/OpenCV/x64/vc15/lib/opencv_world450d.lib
+    LIBS +=  -L$$PWD/../3rdparty/OpenIGTLink/lib/igtl/ -ligtlutild
+    LIBS +=  -L$$PWD/../3rdparty/OpenIGTLink/lib/igtl/ -lOpenIGTLinkd
+    PRE_TARGETDEPS += $$PWD/../3rdparty/OpenIGTLink/lib/igtl/igtlutild.lib
+    PRE_TARGETDEPS += $$PWD/../3rdparty/OpenIGTLink/lib/igtl/OpenIGTLinkd.lib
 }else{
     LIBS += \
         ./../3rdparty/OpenCV/x64/vc15/lib/opencv_world450.lib \
         ./../3rdparty/Boost/lib/*-mt-x64-1_74.lib
+    LIBS +=  -L$$PWD/../3rdparty/OpenIGTLink/lib/igtl/ -ligtlutil
+    LIBS +=  -L$$PWD/../3rdparty/OpenIGTLink/lib/igtl/ -lOpenIGTLink
+    PRE_TARGETDEPS += $$PWD/../3rdparty/OpenIGTLink/lib/igtl/igtlutil.lib
+    PRE_TARGETDEPS += $$PWD/../3rdparty/OpenIGTLink/lib/igtl/OpenIGTLink.lib
 }
 
+
+# OpenIGTLink
+LIBS += -lws2_32
+DEPENDPATH +=     $$PWD/../3rdparty/OpenIGTLink/include/igtl/igtlutil
+DEPENDPATH +=     $$PWD/../3rdparty/OpenIGTLink/include/igtl
+SOURCES += \
+    modules\ExptIGTLink\igtlStringMessage.cxx \
+    modules\ExptIGTLink\igtl_string.c
+HEADERS += \
+    modules\ExptIGTLink\igtlStringMessage.h \
+    modules\ExptIGTLink\igtl_string.h
 
 SOURCES += \
     ../3rdparty/Aurora/Comm32.cpp \
@@ -35,6 +56,7 @@ SOURCES += \
     ../3rdparty/Aurora/SystemCRC.cpp \
     ../3rdparty/fmt-7.1.3/src/format.cc \
     ../3rdparty/fmt-7.1.3/src/os.cc \
+    modules\ExptIGTLink\export_OpenIGTLink.cpp \
     main.cpp \
     mainwindow.cpp \
     modules/cameradetection.cpp \
@@ -52,6 +74,7 @@ HEADERS += \
     ../3rdparty/Aurora/CommandHandling.h \
     ../3rdparty/Aurora/Conversions.h \
     ../3rdparty/Aurora/INIFileRW.h \
+    modules\ExptIGTLink\export_OpenIGTLink.h \
     main.h \
     mainwindow.h \
     modules/cameradetection.h \

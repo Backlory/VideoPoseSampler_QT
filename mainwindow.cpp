@@ -24,6 +24,7 @@ MainWindow::MainWindow(QWidget *parent, QString address, int port, QString saveD
 
     TimeStampImpl = new TimeStamp();
     exptImpl = new Export();
+    exptOpenIGTLinkImpl = new ExportOpenIGTLink();
     exptPath = saveDir;
     
     opcvFrmImpl = &OpenCVFrame::GetInstance();
@@ -32,6 +33,10 @@ MainWindow::MainWindow(QWidget *parent, QString address, int port, QString saveD
     // socket
     this->sock_address = address.isEmpty()?"127.0.0.1" : address;
     this->sock_port = port == 0? 8998 : port;
+    // openIGTLink
+    this->openIGTLink_address = address.isEmpty()?"127.0.0.1" : address;
+    this->openIGTLink_port = port == 0? 8998 : port;
+
     // ROI
     if(roiValues.length() == 0){
         this->clipROI.x = 0;
@@ -98,6 +103,7 @@ MainWindow::MainWindow(QWidget *parent, QString address, int port, QString saveD
     connect(ui->Export_PbRunPause, &QPushButton::clicked, this, &MainWindow::onExport_PbRunPauseClick);
     connect(ui->Export_Pb, &QPushButton::clicked, this, &MainWindow::onExport_PbClick);
     connect(ui->Export_PbSocket, &QPushButton::clicked, this, &MainWindow::onExport_PbSocketClick);
+    connect(ui->Export_PbOpenIGTLink, &QPushButton::clicked, this, &MainWindow::onExport_PbIGTLinkClick);
 
     connect(ndiImpl, &NDIModule::progressUpdate, this, &MainWindow::progressUpdate);
 
@@ -220,7 +226,7 @@ void MainWindow::onTime(){
     }
 
     // 数据导出
-    if (this->onExportingLocal || this->onExportingSocket) {
+    if (this->onExportingLocal || this->onExportingSocket || this->onExportingOpenIGTLink) {
         this->ui->NDI_LableType0->setText("导出类型：7");
         this->ui->NDI_LableType1->setText("导出类型：7");
         this->ui->NDI_LableType2->setText("导出类型：7");
@@ -236,11 +242,14 @@ void MainWindow::onTime(){
                                                       TimeStampImpl->getTimeStamp());
             if(m >= 3) {
                 this->progressUpdate(100, "发生失败，错误代码="+ std::to_string(m));
-                //QMessage询问是否断开连接
-                //int ret = QMessageBox::question(this, "错误", "客户端连接中断，错误代码="+QString::number(m)+"\n是否要断开TCP连接？", QMessageBox::Yes | QMessageBox::No, QMessageBox::Yes);
-                //if (ret == QMessageBox::Yes) {
-                //    this->ui->Export_PbSocket->click();
-                //}
+            }
+        }
+        if (this->onExportingOpenIGTLink){
+            int m = this->exptOpenIGTLinkImpl->exportOpenIGTLinkData(exptIdx, cvframe,
+                                                      ndiHandle, ndiData7,
+                                                      TimeStampImpl->getTimeStamp());
+            if(m >= 3) {
+                this->progressUpdate(100, "发生失败，错误代码="+ std::to_string(m));
             }
         }
         details += "正在本地导出:" + QString(this->onExportingLocal?"true":"false") + "\n";
@@ -313,9 +322,10 @@ void MainWindow::onExport_PbClick() {
             this->onExportingLocal = true;
             this->ui->Export_Pb->setText("停止本地采集");
             //
-            if(!this->onExportingSocket){  //确保都关闭才重置
+            if(!this->onExportingSocket && !this->onExportingOpenIGTLink){  //确保都关闭才重置
                 this->exptIdx = 0;
             }
+
             if (this->exptPath == "")
                 this->exptFolderPath = "SampleOutput/" + this->TimeStampImpl->getTimeStamp();
             else{
@@ -326,10 +336,13 @@ void MainWindow::onExport_PbClick() {
     }
 }
 void MainWindow::onExport_PbSocketClick() {
+    if (this->onExportingOpenIGTLink){
+        return;
+    }
     if (this->onRunning){
         if (this->onExportingSocket == true) {
             this->onExportingSocket = false;
-            this->ui->Export_PbSocket->setText("启动采集服务器");
+            this->ui->Export_PbSocket->setText("启动采集服务器(TCP)");
             
             this->exptImpl->SocketClose();
         }
@@ -342,23 +355,74 @@ void MainWindow::onExport_PbSocketClick() {
                 this->progressUpdate(0, "解析IP地址和端口...");
                 std::string ip = address.split(":").at(0).toStdString();
                 int port = address.split(":").at(1).toInt();
-                this->ui->Export_PbSocket->setText("建立服务器...");
+                this->ui->Export_PbSocket->setText("建立服务器(TCP)...");
                 QApplication::processEvents();
 
                 this->progressUpdate(70, "等待TCP连接中...");
-                if(this->exptImpl->SocketInit(ip, port)){
+                if(this->exptImpl->SocketInit(ip, port)){ // TODO:内存泄露？
                     this->onExportingSocket = true;
-                    this->ui->Export_PbSocket->setText("关闭采集服务器");
-                    this->progressUpdate(100, "连接成功。");
+                    this->ui->Export_PbSocket->setText("关闭采集服务器(TCP)");
+                    this->progressUpdate(100, "TCP连接成功，开放于"+address.toStdString());
                     //
                     if(!this->onExportingLocal){  //确保都关闭才重置
                         this->exptIdx = 0;
                     }
                 }
                 else{
-                    this->ui->Export_PbSocket->setText("启动采集服务器");
+                    this->ui->Export_PbSocket->setText("启动采集服务器(TCP)");
                     QMessageBox::warning(this, "错误", "无法启动服务器"+address);
                     this->exptImpl->SocketClose();
+                    this->progressUpdate(100, "连接失败。");
+                }
+            }
+        }
+    }
+    else {
+        QMessageBox::warning(this, "错误", "请先点击\"启动\"以运行采集进程，再启动采集服务器！");
+    }
+}
+
+
+void MainWindow::onExport_PbIGTLinkClick() {
+    if (this->onExportingSocket){
+        return;
+    }
+    if (this->onRunning){
+        if (this->onExportingOpenIGTLink == true) {
+            this->onExportingOpenIGTLink = false;
+            this->ui->Export_PbOpenIGTLink->setText("启动采集服务器(OpenIGTLink)");
+            this->exptOpenIGTLinkImpl->Close(); //关闭 TODO
+
+        }
+        else{
+            bool bOK = false;
+            QString port_str = QInputDialog::getText(this, "地址", "请输入服务器开放的端口（Port）",
+                QLineEdit::Normal, QString::number(this->openIGTLink_port), &bOK);
+            if (bOK)
+            {
+                this->progressUpdate(0, "解析端口...");
+                this->openIGTLink_port = port_str.toInt();
+                this->ui->Export_PbOpenIGTLink->setText("建立服务器(OpenIGTLink)...");
+                QApplication::processEvents();
+
+                this->progressUpdate(70, "等待OpenIGTLink连接中...");
+
+                if(this->exptOpenIGTLinkImpl->Init(this->openIGTLink_port)){
+                    this->onExportingOpenIGTLink = true;
+                    this->ui->Export_PbOpenIGTLink->setText("关闭采集服务器(OpenIGTLink)");
+                    std::string temp_address;
+                    this->exptOpenIGTLinkImpl->getAddress(temp_address);
+                    this->openIGTLink_address = QString::fromStdString(temp_address);
+                    this->progressUpdate(100, "OpenIGTLink连接成功，开放于"+temp_address+":"+port_str.toStdString());
+                    //
+                    if(!this->onExportingLocal){  //确保都关闭才重置
+                        this->exptIdx = 0;
+                    }
+                }
+                else{
+                    this->ui->Export_PbOpenIGTLink->setText("启动采集服务器(OpenIGTLink)");
+                    QMessageBox::warning(this, "错误", "无法启动服务器.");
+                    this->exptOpenIGTLinkImpl->Close();
                     this->progressUpdate(100, "连接失败。");
                 }
             }

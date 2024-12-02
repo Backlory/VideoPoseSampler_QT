@@ -26,6 +26,7 @@
 #include "modules/export.h"
 #include "modules/ndimodule.h"
 #include "modules/export.h"
+#include "modules/ExptIGTLink/export_OpenIGTLink.h"
 #include "modules/opencvframe.h"
 #include "modules/timestamp.h"
 
@@ -76,6 +77,7 @@ private:
     bool onRunning = false;
     bool onExportingLocal = false;
     bool onExportingSocket = false;
+    bool onExportingOpenIGTLink = false;
     cv::Mat cvframe;
     cv::Mat cvframeDisp;
     cv::Rect clipROI;
@@ -97,9 +99,12 @@ private:
     std::map<int, std::shared_ptr<Eigen::Matrix4d>> ndiOut4;
     //数据导出
     Export * exptImpl;
+    ExportOpenIGTLink * exptOpenIGTLinkImpl;
     QString exptPath;
     QString sock_address;
     int sock_port;
+    QString openIGTLink_address;
+    int openIGTLink_port;
     int exptIdx = 0;
     std::vector<double> fpsList;
     QString exptFolderPath;
@@ -118,6 +123,7 @@ public slots:
     void onExport_PbRunPauseClick();
     void onExport_PbClick();
     void onExport_PbSocketClick();
+    void onExport_PbIGTLinkClick();
     void onPbShowSaveClick();
 };
 
