@@ -41,6 +41,7 @@ SOURCES += \
     modules/comportdetection.cpp \
     modules/export.cpp \
     modules/highresolutiontime.cpp \
+    modules/localdwpplayer.cpp \
     modules/ndimodule.cpp \
     modules/opencvframe.cpp \
     modules/timestamp.cpp \
@@ -58,6 +59,7 @@ HEADERS += \
     modules/comportdetection.h \
     modules/export.h \
     modules/highresolutiontime.h \
+    modules/localdwpplayer.h \
     modules/ndimodule.h \
     modules/opencvframe.h \
     modules/timestamp.h \

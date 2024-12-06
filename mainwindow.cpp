@@ -3,7 +3,7 @@
 
 #define _MAJOR_VERSION_ "1"
 #define _MINOR_VERSION_ "3"
-#define _PATCH_VERSION_ "3"
+#define _PATCH_VERSION_ "5"
 
 
 MainWindow::MainWindow(QWidget *parent, QString address, int port, QString saveDir, QStringList roiValues, QStringList sizeValues)
@@ -28,6 +28,8 @@ MainWindow::MainWindow(QWidget *parent, QString address, int port, QString saveD
     
     opcvFrmImpl = &OpenCVFrame::GetInstance();
     ndiImpl = &NDIModule::GetInstance();
+
+    localDwPPlayerImpl = new LocalDwPPlayer();
 
     // socket
     this->sock_address = address.isEmpty()?"127.0.0.1" : address;
@@ -95,6 +97,16 @@ MainWindow::MainWindow(QWidget *parent, QString address, int port, QString saveD
 
     connect(ui->pB_showSave, &QPushButton::clicked, this, &MainWindow::onPbShowSaveClick);
 
+    connect(ui->LocalDwP_PbLoadDwP, &QPushButton::clicked, this, &MainWindow::onLocalDwP_PbLoadDwPClick);
+    connect(ui->LocalDwP_PbUnloadDwP, &QPushButton::clicked, this, &MainWindow::onLocalDwP_PbUnloadDwPClick);
+    connect(ui->LocalDwP_HsTimeline, &QSlider::valueChanged, this, &MainWindow::onLocalDwP_HsTimelineValueChanged);
+    connect(ui->LocalDwP_CbRecurrent, &QCheckBox::clicked, this, &MainWindow::onLocalDwP_CbRecurrentClick);
+    connect(ui->LocalDwP_pBSetFPS, &QPushButton::clicked, this, &MainWindow::onLocalDwP_pBSetFPSClick);
+    connect(ui->LocalDwP_PbJumpTo, &QPushButton::clicked, this, &MainWindow::onLocalDwP_PbJumpToClick);
+    connect(ui->LocalDwP_PbPlayStop, &QPushButton::clicked, this, &MainWindow::onLocalDwP_PbPlayStopClick);
+
+
+
     connect(ui->Export_PbRunPause, &QPushButton::clicked, this, &MainWindow::onExport_PbRunPauseClick);
     connect(ui->Export_Pb, &QPushButton::clicked, this, &MainWindow::onExport_PbClick);
     connect(ui->Export_PbSocket, &QPushButton::clicked, this, &MainWindow::onExport_PbSocketClick);
@@ -159,7 +171,7 @@ QString pose2str(QuatTransformationStruct * m, const double mErr){
 }
 
 void MainWindow::updatePose(const std::map<int, data_ptr7> poseMap, std::map<int, double> poseMapErr){
-    qDebug() << 0 << this->ndiHandle;
+    //qDebug() << 0 << this->ndiHandle;
     if (this->ndiHandle[0]>0){
         auto m = poseMap.at(this->ndiHandle[0]); //data_ptr7, 需要get()
         auto mErr = poseMapErr.at(this->ndiHandle[0]); //double
@@ -195,13 +207,21 @@ void MainWindow::onTime(){
     // 时间戳更新
     ui->TimeS_Label->setText("当前时间戳: \t"+this->TimeStampImpl->getTimeStamp());
 
-    // 同步触发
-    if (this->opcvFrmImpl->isOpened()) {
-        this->opcvFrmImpl->getFrame(this->cvframe, this->clipROI);
+    if(this->localDwPPlayerImpl->isReadyToGrab()){
+        this->localDwPPlayerImpl->getOneFrame(this->cvframe, this->ndiHandle, this->ndiData7, this->ndiData7Err);
+        this->ui->LocalDwP_HsTimeline->setValue(this->localDwPPlayerImpl->getNowIdx());
+        this->updateFrame(this->cvframe);
+        this->updatePose(this->ndiData7, this->ndiData7Err);
     }
-    if (this->ndiImpl->isOpened()){
-        this->ndiData7.clear();
-        this->ndiImpl->getPosition(this->ndiData7, this->ndiData7Err); //尺寸未知
+    else {
+        // 同步触发
+        if (this->opcvFrmImpl->isOpened()) {
+            this->opcvFrmImpl->getFrame(this->cvframe, this->clipROI);
+        }
+        if (this->ndiImpl->isOpened()){
+            this->ndiData7.clear();
+            this->ndiImpl->getPosition(this->ndiData7, this->ndiData7Err); //尺寸未知
+        }
     }
 
     QString details;
@@ -213,7 +233,7 @@ void MainWindow::onTime(){
         details += QString::fromStdString(opcvFrmImpl->getInfo());
     }
 
-    // 更新位姿
+    // 更新位姿z
     if (this->ndiImpl->isOpened()){
         this->updatePose(this->ndiData7, this->ndiData7Err);
         details += "电磁定位输出类型：7\n";
@@ -258,7 +278,7 @@ void MainWindow::onTime(){
     ui->OpcvF_LableDetail->setText(details);
 }
 
-// ====== 01 camera 相关交互 ======
+// ====== 01a camera 相关交互 ======
 
 void MainWindow::onCamD_PbConnectClick(){
     opcvFrmImpl->Close();
@@ -284,92 +304,7 @@ void MainWindow::onCamD_PbConnectClick(){
     }
 }
 
-
-// ======02 export 相关交互 ======
-void MainWindow::onExport_PbRunPauseClick(){
-    if (this->onRunning == true){
-        this->onRunning = false;
-        this->timer->stop();
-        this->ui->Export_PbRunPause->setText("启动");
-        this->onExportingLocal = false;
-        this->ui->Export_Pb->setText("开始采集（到本地）");
-        this->ui->Export_Pb->setEnabled(false);
-    }
-    else{
-        this->onRunning = true;
-        this->timer->start(25); // Max FPS = 40
-        this->ui->Export_PbRunPause->setText("暂停");
-        this->ui->Export_Pb->setEnabled(true);
-    }
-}
-
-void MainWindow::onExport_PbClick() {
-    if (this->onRunning){
-        if (this->onExportingLocal == true) {
-            this->onExportingLocal = false;
-            this->ui->Export_Pb->setText("开始采集（到本地）");
-        }
-        else{
-            this->onExportingLocal = true;
-            this->ui->Export_Pb->setText("停止本地采集");
-            //
-            if(!this->onExportingSocket){  //确保都关闭才重置
-                this->exptIdx = 0;
-            }
-            if (this->exptPath == "")
-                this->exptFolderPath = "SampleOutput/" + this->TimeStampImpl->getTimeStamp();
-            else{
-                this->exptFolderPath = this->exptPath;
-                this->exptImpl->createFolder(exptFolderPath);
-            }
-        }
-    }
-}
-void MainWindow::onExport_PbSocketClick() {
-    if (this->onRunning){
-        if (this->onExportingSocket == true) {
-            this->onExportingSocket = false;
-            this->ui->Export_PbSocket->setText("启动采集服务器");
-            
-            this->exptImpl->SocketClose();
-        }
-        else{
-            bool bOK = false;
-            QString address = QInputDialog::getText(this, "地址", "请输入服务器开放的地址和端口（IP:Port）",
-                QLineEdit::Normal, this->sock_address + ":" + QString::number(this->sock_port), &bOK);
-            if (bOK)
-            {
-                this->progressUpdate(0, "解析IP地址和端口...");
-                std::string ip = address.split(":").at(0).toStdString();
-                int port = address.split(":").at(1).toInt();
-                this->ui->Export_PbSocket->setText("建立服务器...");
-                QApplication::processEvents();
-
-                this->progressUpdate(70, "等待TCP连接中...");
-                if(this->exptImpl->SocketInit(ip, port)){
-                    this->onExportingSocket = true;
-                    this->ui->Export_PbSocket->setText("关闭采集服务器");
-                    this->progressUpdate(100, "连接成功。");
-                    //
-                    if(!this->onExportingLocal){  //确保都关闭才重置
-                        this->exptIdx = 0;
-                    }
-                }
-                else{
-                    this->ui->Export_PbSocket->setText("启动采集服务器");
-                    QMessageBox::warning(this, "错误", "无法启动服务器"+address);
-                    this->exptImpl->SocketClose();
-                    this->progressUpdate(100, "连接失败。");
-                }
-            }
-        }
-    }
-    else {
-        QMessageBox::warning(this, "错误", "请先点击\"启动\"以运行采集进程，再启动采集服务器！");
-    }
-}
-
-// ====== 03 COM口 交互 ======
+// ====== 01b COM口 交互 ======
 
 Worker_ComInit::Worker_ComInit(QListView *listView, QStandardItemModel *modelCom, COMPortDetection *comDetImpl) {
     this->listView = listView;
@@ -528,6 +463,198 @@ void MainWindow::onComD_PbConnectClick(){
         this->timer->start(25); // Max FPS = 40
         this->ui->Export_PbRunPause->setText("暂停");
         this->ui->Export_Pb->setEnabled(true);
+    }
+}
+
+// ============== 02 本地数据集相关交互 ==============
+
+void MainWindow::onLocalDwP_PbLoadDwPClick(){
+    if (this->onRunning == true) {
+        this->ui->Export_PbRunPause->click();
+    }
+    // 打开本地文件夹
+    QString path = QFileDialog::getExistingDirectory(this, "选择数据集文件夹", "");
+    if (path.isEmpty()){
+        return;
+    }
+    else {
+        bool ret = this->localDwPPlayerImpl->loadDwP(path.toStdString());
+        if (ret) {
+            this->ui->LocalDwP_PbLoadDwP->setEnabled(false);
+            this->ui->LocalDwP_PbUnloadDwP->setEnabled(true);
+            this->ui->LocalDwP_HsTimeline->setEnabled(true);
+            this->ui->LocalDwP_HsTimeline->setMinimum(0);
+            this->ui->LocalDwP_HsTimeline->setMaximum(this->localDwPPlayerImpl->getLength());
+            this->ui->LocalDwP_HsTimeline->setValue(0);
+            this->ui->LocalDwP_CbRecurrent->setEnabled(true);
+            this->ui->LocalDwP_CbRecurrent->setChecked(false);
+            //this->ui->LocalDwP_pBSetFPS->setEnabled(true);
+            this->ui->LocalDwP_PbJumpTo->setEnabled(true);
+            this->ui->LocalDwP_PbPlayStop->setEnabled(true);
+            this->ui->LocalDwP_PbPlayStop->setText("播放");
+            this->ui->LocalDwP_LbFrameIdx->setText("帧编号："
+                + QString::number(this->localDwPPlayerImpl->getNowIdx()) 
+                + "/" 
+                + QString::number(this->localDwPPlayerImpl->getLength())); 
+        }
+        else {
+            QMessageBox::warning(this, "错误", "无法加载数据集，请检查文件夹是否存在或者文件格式是否正确。需要满足：\n\t1、frame、PoseWithTimeStamp文件夹；\n\t2、图像和位姿索引连续且一致。\n");
+        }
+    }
+}
+void MainWindow::onLocalDwP_PbUnloadDwPClick(){
+    if (this->onRunning == true) {
+        this->ui->Export_PbRunPause->click();
+    }
+    if (this->localDwPPlayerImpl->unloadDwP()){
+        this->ui->LocalDwP_PbLoadDwP->setEnabled(true);
+        this->ui->LocalDwP_PbUnloadDwP->setEnabled(false);
+        this->ui->LocalDwP_HsTimeline->setEnabled(false);
+        this->ui->LocalDwP_CbRecurrent->setEnabled(false);
+        //this->ui->LocalDwP_pBSetFPS->setEnabled(false);
+        this->ui->LocalDwP_PbJumpTo->setEnabled(false);
+        this->ui->LocalDwP_PbPlayStop->setEnabled(false);
+        this->ui->LocalDwP_PbPlayStop->setText("播放");
+        this->ui->LocalDwP_LbFrameIdx->setText("帧编号：0/0");
+    }
+    else {
+        QMessageBox::warning(this, "错误", "无法卸载数据集，请检查是否已经加载数据集。");
+    }
+}
+
+void MainWindow::onLocalDwP_HsTimelineValueChanged(){
+    if (this->localDwPPlayerImpl->isReadyToGrab()){
+        this->localDwPPlayerImpl->jumpTo(this->ui->LocalDwP_HsTimeline->value());
+        this->ui->LocalDwP_LbFrameIdx->setText("帧编号："
+            + QString::number(this->localDwPPlayerImpl->getNowIdx())
+            + "/"
+            + QString::number(this->localDwPPlayerImpl->getLength()));
+    }
+}
+
+void MainWindow::onLocalDwP_CbRecurrentClick(){
+    if (this->ui->LocalDwP_CbRecurrent->isChecked()){
+        this->localDwPPlayerImpl->setRecurrence(true);
+    }
+    else {
+        this->localDwPPlayerImpl->setRecurrence(false);
+    }
+}
+void MainWindow::onLocalDwP_pBSetFPSClick(){
+    // 输入数字，小数，默认30.0，最大100.0，最小1.0
+    bool bOK = false;
+    double fps = QInputDialog::getDouble(this, "设置FPS", "请输入FPS", 30.0, 1.0, 100.0, 1, &bOK);
+    if (bOK){
+        this->localDwPPlayerImpl->setFPS(fps);
+        this->ui->LocalDwP_LbFPS->setText("FPS: " + QString::number(fps));
+    }
+}
+void MainWindow::onLocalDwP_PbJumpToClick(){
+    // 输入数字，整数，默认0，最大frameCount，最小0
+    bool bOK = false;
+    int frameIdx = QInputDialog::getInt(this, "跳转到帧", "请输入帧数", 0, 0, this->localDwPPlayerImpl->getLength(), 1, &bOK);
+    if (bOK){
+        this->ui->LocalDwP_HsTimeline->setValue(frameIdx);
+    }
+    return;
+}
+void MainWindow::onLocalDwP_PbPlayStopClick(){
+    if (this->localDwPPlayerImpl->isReadyToGrab()){
+        this->localDwPPlayerImpl->flipFlag();
+        if (this->localDwPPlayerImpl->isPlaying()) {
+            this->ui->LocalDwP_PbPlayStop->setText("暂停");
+        }
+        else {
+            this->ui->LocalDwP_PbPlayStop->setText("播放");
+        }
+    }
+    else {
+        QMessageBox::warning(this, "错误", "请先加载数据集。");
+    }
+}
+
+
+// ======03 export 相关交互 ======
+void MainWindow::onExport_PbRunPauseClick(){
+    if (this->onRunning == true){
+        this->onRunning = false;
+        this->timer->stop();
+        this->ui->Export_PbRunPause->setText("启动");
+        this->onExportingLocal = false;
+        this->ui->Export_Pb->setText("开始采集（到本地）");
+        this->ui->Export_Pb->setEnabled(false);
+    }
+    else{
+        this->onRunning = true;
+        this->timer->start(25); // Max FPS = 40
+        this->ui->Export_PbRunPause->setText("暂停");
+        this->ui->Export_Pb->setEnabled(true);
+    }
+}
+
+void MainWindow::onExport_PbClick() {
+    if (this->onRunning){
+        if (this->onExportingLocal == true) {
+            this->onExportingLocal = false;
+            this->ui->Export_Pb->setText("开始采集（到本地）");
+        }
+        else{
+            this->onExportingLocal = true;
+            this->ui->Export_Pb->setText("停止本地采集");
+            //
+            if(!this->onExportingSocket){  //确保都关闭才重置
+                this->exptIdx = 0;
+            }
+            if (this->exptPath == "")
+                this->exptFolderPath = "SampleOutput/" + this->TimeStampImpl->getTimeStamp();
+            else{
+                this->exptFolderPath = this->exptPath;
+                this->exptImpl->createFolder(exptFolderPath);
+            }
+        }
+    }
+}
+void MainWindow::onExport_PbSocketClick() {
+    if (this->onRunning){
+        if (this->onExportingSocket == true) {
+            this->onExportingSocket = false;
+            this->ui->Export_PbSocket->setText("启动采集服务器");
+            
+            this->exptImpl->SocketClose();
+        }
+        else{
+            bool bOK = false;
+            QString address = QInputDialog::getText(this, "地址", "请输入服务器开放的地址和端口（IP:Port）",
+                QLineEdit::Normal, this->sock_address + ":" + QString::number(this->sock_port), &bOK);
+            if (bOK)
+            {
+                this->progressUpdate(0, "解析IP地址和端口...");
+                std::string ip = address.split(":").at(0).toStdString();
+                int port = address.split(":").at(1).toInt();
+                this->ui->Export_PbSocket->setText("建立服务器...");
+                QApplication::processEvents();
+
+                this->progressUpdate(70, "等待TCP连接中...");
+                if(this->exptImpl->SocketInit(ip, port)){
+                    this->onExportingSocket = true;
+                    this->ui->Export_PbSocket->setText("关闭采集服务器");
+                    this->progressUpdate(100, "连接成功。");
+                    //
+                    if(!this->onExportingLocal){  //确保都关闭才重置
+                        this->exptIdx = 0;
+                    }
+                }
+                else{
+                    this->ui->Export_PbSocket->setText("启动采集服务器");
+                    QMessageBox::warning(this, "错误", "无法启动服务器"+address);
+                    this->exptImpl->SocketClose();
+                    this->progressUpdate(100, "连接失败。");
+                }
+            }
+        }
+    }
+    else {
+        QMessageBox::warning(this, "错误", "请先点击\"启动\"以运行采集进程，再启动采集服务器！");
     }
 }
 

@@ -18,6 +18,7 @@
 #include <QProgressBar>
 #include <QLabel>
 #include <QDebug>
+#include <QFileDialog>
 
 #include "Sophus/so3.hpp"
 
@@ -28,6 +29,7 @@
 #include "modules/export.h"
 #include "modules/opencvframe.h"
 #include "modules/timestamp.h"
+#include "modules/localdwpplayer.h"
 
 #include "selectresolution.h"
 
@@ -70,6 +72,7 @@ private:
     CameraDetection *camDetImpl;
     QStandardItemModel * modelCom;
     COMPortDetection *comDetImpl;
+    LocalDwPPlayer *localDwPPlayerImpl;
     // 数据采集
     OpenCVFrame * opcvFrmImpl;
     NDIModule * ndiImpl;
@@ -111,14 +114,24 @@ private slots:
 
 public slots:
     void onTime();
+    void onPbShowSaveClick();
+    //
     void onCamD_PbConnectClick();
     void onCamD_PbChangeRClick();
     void onComD_PbConnectClick();
     void onComD_PbResetClick();
+    //
+    void onLocalDwP_HsTimelineValueChanged();
+    void onLocalDwP_PbLoadDwPClick();
+    void onLocalDwP_PbUnloadDwPClick();
+    void onLocalDwP_CbRecurrentClick();
+    void onLocalDwP_pBSetFPSClick();
+    void onLocalDwP_PbJumpToClick();
+    void onLocalDwP_PbPlayStopClick();
+    //
     void onExport_PbRunPauseClick();
     void onExport_PbClick();
-    void onExport_PbSocketClick();
-    void onPbShowSaveClick();
+    void onExport_PbSocketClick();    
 };
 
 

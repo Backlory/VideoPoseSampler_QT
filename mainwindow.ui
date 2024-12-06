@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>934</width>
-    <height>679</height>
+    <height>680</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -20,7 +20,7 @@
    </size>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <layout class="QHBoxLayout" name="horizontalLayout_5" stretch="4">
+   <layout class="QHBoxLayout" name="horizontalLayout_5" stretch="0">
     <item>
      <widget class="QSplitter" name="splitter_2">
       <property name="orientation">
@@ -366,91 +366,205 @@
         </size>
        </property>
        <property name="title">
-        <string>NDI</string>
+        <string>控制台</string>
        </property>
        <layout class="QVBoxLayout" name="verticalLayout_3">
         <item>
-         <layout class="QHBoxLayout" name="horizontalLayout_3">
-          <item>
-           <widget class="QLabel" name="CamD_Label">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="text">
-             <string>相机：</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QPushButton" name="CamD_PbConnect">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="styleSheet">
-             <string notr="true">background-color: rgb(15, 221, 22);</string>
-            </property>
-            <property name="text">
-             <string>连接</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QPushButton" name="CamD_PbChangeR">
-            <property name="text">
-             <string>修改分辨率</string>
-            </property>
-           </widget>
-          </item>
-         </layout>
+         <widget class="QGroupBox" name="groupBox_9">
+          <property name="title">
+           <string>连接到设备（低优先级）</string>
+          </property>
+          <layout class="QVBoxLayout" name="verticalLayout_7">
+           <item>
+            <layout class="QHBoxLayout" name="horizontalLayout_3">
+             <item>
+              <widget class="QLabel" name="CamD_Label">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="text">
+                <string>相机：</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="CamD_PbConnect">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="styleSheet">
+                <string notr="true">background-color: rgb(15, 221, 22);</string>
+               </property>
+               <property name="text">
+                <string>连接</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="CamD_PbChangeR">
+               <property name="text">
+                <string>修改分辨率</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+           <item>
+            <layout class="QHBoxLayout" name="horizontalLayout_4">
+             <item>
+              <widget class="QLabel" name="ComD_Label">
+               <property name="text">
+                <string>COM口：</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="ComD_PbReset">
+               <property name="text">
+                <string>重置</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="ComD_PbConnect">
+               <property name="styleSheet">
+                <string notr="true">background-color: rgb(15, 221, 22);</string>
+               </property>
+               <property name="text">
+                <string>连接</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+           <item>
+            <widget class="QListView" name="ComD_ListView">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="maximumSize">
+              <size>
+               <width>16777215</width>
+               <height>100</height>
+              </size>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
         </item>
         <item>
-         <layout class="QHBoxLayout" name="horizontalLayout_4">
-          <item>
-           <widget class="QLabel" name="ComD_Label">
-            <property name="text">
-             <string>COM口：</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QPushButton" name="ComD_PbReset">
-            <property name="text">
-             <string>重置</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QPushButton" name="ComD_PbConnect">
-            <property name="styleSheet">
-             <string notr="true">background-color: rgb(15, 221, 22);</string>
-            </property>
-            <property name="text">
-             <string>连接</string>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </item>
-        <item>
-         <widget class="QListView" name="ComD_ListView">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
+         <widget class="QGroupBox" name="groupBox_8">
+          <property name="title">
+           <string>加载本地数据（高优先级）</string>
           </property>
-          <property name="maximumSize">
-           <size>
-            <width>16777215</width>
-            <height>100</height>
-           </size>
-          </property>
+          <layout class="QGridLayout" name="gridLayout">
+           <item row="3" column="0">
+            <widget class="QLabel" name="LocalDwP_LbFPS">
+             <property name="enabled">
+              <bool>false</bool>
+             </property>
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="text">
+              <string>模拟FPS：-</string>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="0" colspan="2">
+            <widget class="QSlider" name="LocalDwP_HsTimeline">
+             <property name="enabled">
+              <bool>false</bool>
+             </property>
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+            </widget>
+           </item>
+           <item row="3" column="1">
+            <widget class="QPushButton" name="LocalDwP_pBSetFPS">
+             <property name="enabled">
+              <bool>false</bool>
+             </property>
+             <property name="text">
+              <string>设置FPS...</string>
+             </property>
+            </widget>
+           </item>
+           <item row="4" column="1">
+            <widget class="QPushButton" name="LocalDwP_PbJumpTo">
+             <property name="enabled">
+              <bool>false</bool>
+             </property>
+             <property name="text">
+              <string>跳转到...</string>
+             </property>
+            </widget>
+           </item>
+           <item row="5" column="0" colspan="2">
+            <widget class="QPushButton" name="LocalDwP_PbPlayStop">
+             <property name="enabled">
+              <bool>false</bool>
+             </property>
+             <property name="text">
+              <string>播放</string>
+             </property>
+            </widget>
+           </item>
+           <item row="4" column="0">
+            <widget class="QLabel" name="LocalDwP_LbFrameIdx">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="text">
+              <string>帧编号：0/0</string>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="1">
+            <widget class="QCheckBox" name="LocalDwP_CbRecurrent">
+             <property name="enabled">
+              <bool>false</bool>
+             </property>
+             <property name="text">
+              <string>循环播放</string>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="0">
+            <widget class="QPushButton" name="LocalDwP_PbLoadDwP">
+             <property name="text">
+              <string>加载本地DwP格式数据集</string>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="1">
+            <widget class="QPushButton" name="LocalDwP_PbUnloadDwP">
+             <property name="enabled">
+              <bool>false</bool>
+             </property>
+             <property name="text">
+              <string>卸载</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
          </widget>
         </item>
         <item>
