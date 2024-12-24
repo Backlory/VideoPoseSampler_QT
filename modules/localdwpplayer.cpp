@@ -190,6 +190,7 @@ bool LocalDwPPlayer::getOneFrame(cv::Mat &frame,
                 std::this_thread::sleep_for(std::chrono::milliseconds(1));
             }
         }
+        return true;
     }
     else {
         return false;

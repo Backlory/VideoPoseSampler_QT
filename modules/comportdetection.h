@@ -1,7 +1,7 @@
 #ifndef COMPORTDETECTION_H
 #define COMPORTDETECTION_H
 
-#include "../3rdparty/Aurora/INIFileRW.h"
+#include "../Aurora/INIFileRW.h"
 #include <string>
 #include <vector>
 #include <map>

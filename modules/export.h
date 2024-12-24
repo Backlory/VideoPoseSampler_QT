@@ -3,10 +3,11 @@
 
 #include <QString>
 #include <QDir>
+#include <QDebug>
 
 #include <WinSock2.h>
 #include <QDebug>
-#include "../3rdparty/Aurora/APIStructures.h"
+#include "../Aurora/APIStructures.h"
 #include "opencv2/opencv.hpp"
 #include "Sophus/so3.hpp"
 #include "boost/thread.hpp"
@@ -209,13 +210,13 @@ int Export::exportSocketData(const int &frameIndex, const cv::Mat &frame,
         return 2;  // 接收失败，不是get
     }
 
-    //第一次发送：size信号+msg_part1, 长度需==256，以K填充
+    //第一次发送：size信号+msg_part1, 长度需==512，以K填充
     std::string msg_Sizep1_Sizep2_P1 = sizePart1 + sizePart2 + msg_part1;
     int size_ = msg_Sizep1_Sizep2_P1.size();
-    for (size_t i =0; i < 256 - size_; ++i) {
+    for (int i =0; i < 512 - size_; ++i) {
         msg_Sizep1_Sizep2_P1 += "k";
     }
-    if (send(this->sockClient, msg_Sizep1_Sizep2_P1.c_str(), 256, 0) <= 0) {
+    if (send(this->sockClient, msg_Sizep1_Sizep2_P1.c_str(), 512, 0) <= 0) {
         qDebug() << "第一次发送失败";
         return 2;  // 发送失败
     }

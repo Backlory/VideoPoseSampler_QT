@@ -3,7 +3,7 @@
 
 #define _MAJOR_VERSION_ "1"
 #define _MINOR_VERSION_ "3"
-#define _PATCH_VERSION_ "5"
+#define _PATCH_VERSION_ "6"
 
 
 MainWindow::MainWindow(QWidget *parent, QString address, int port, QString saveDir, QStringList roiValues, QStringList sizeValues)
@@ -255,7 +255,7 @@ void MainWindow::onTime(){
                                                       ndiHandle, ndiData7,
                                                       TimeStampImpl->getTimeStamp());
             if(m >= 3) {
-                this->progressUpdate(100, "发生失败，错误代码="+ std::to_string(m));
+                this->progressUpdate(100, "failed code ="+ std::to_string(m));
                 //QMessage询问是否断开连接
                 //int ret = QMessageBox::question(this, "错误", "客户端连接中断，错误代码="+QString::number(m)+"\n是否要断开TCP连接？", QMessageBox::Yes | QMessageBox::No, QMessageBox::Yes);
                 //if (ret == QMessageBox::Yes) {
@@ -267,11 +267,16 @@ void MainWindow::onTime(){
         details += "正在端口导出:" + QString(this->onExportingSocket?"true":"false") + "\n";
     }
     // ROI
-    details += "clipROI:["+
-               QString::number(this->clipROI.x)+","+ \
-                QString::number(this->clipROI.y)+","+ \
-                QString::number(this->clipROI.width)+","+ \
-               QString::number(this->clipROI.height)+"]\n";
+    if(this->localDwPPlayerImpl->isReadyToGrab()){
+        details += "clipROI:[do not use]\n";
+    }
+    else {
+        details += "clipROI:["+
+                   QString::number(this->clipROI.x)+","+ \
+                    QString::number(this->clipROI.y)+","+ \
+                    QString::number(this->clipROI.width)+","+ \
+                   QString::number(this->clipROI.height)+"]\n";
+    }
     //std::vector<double> fpsList;
     details += "FPS:" + this->TimeStampImpl->getFPS();
     this->exptIdx++;
@@ -346,14 +351,14 @@ void MainWindow::onComD_PbResetClick(){
 
 
     // 关闭端口
-    this->progressUpdate(25, "正在终止数据采集进程...");
+    this->progressUpdate(25, "Terminating data collection process...");
     this->ndiImpl->StopTracking();
-    this->progressUpdate(50, "正在关闭现有的串行连接...");
+    this->progressUpdate(50, "Closing existing serial connection...");
     this->ndiImpl->Close();
     ui->ComD_Label->setText("当前端口: 关闭");
 
     // 检查端口列表
-    this->progressUpdate(75, "正在重新扫描所有可用串行端口...");
+    this->progressUpdate(75, "Rescan all available serial ports...");
     modelCom->clear();
     QStandardItem *item = new QStandardItem("正在检查串行端口...");
     modelCom->appendRow(item);
@@ -362,7 +367,7 @@ void MainWindow::onComD_PbResetClick(){
     // 加载到列表
     this->worker_cominit->start();
 
-    this->progressUpdate(100, "串行端口重置完毕。");
+    this->progressUpdate(100, "Serial port reset complete.");
     return;
 }
 
@@ -405,7 +410,7 @@ void MainWindow::onComD_PbConnectClick(){
             return;
         }
         comName = "COM" + std::to_string(comIndex);
-        this->progressUpdate(100, "手动输入了串口号："+comName);
+        this->progressUpdate(100, "manually input com port = "+comName);
         this->comDetImpl->activateCOM(comName);
     }
     else {
@@ -416,7 +421,7 @@ void MainWindow::onComD_PbConnectClick(){
         ndiImpl->Initialize(true, this->comDetImpl->getActivateCOM());
     }
     catch (std::runtime_error &e) {
-        this->progressUpdate(100, "NDI Aurora设备初始化失败。");
+        this->progressUpdate(100, "NDI Aurora device init failed.");
         QMessageBox::warning(this, "初始化时发生的错误", QString::fromStdString(e.what()));
         return;
     }
@@ -628,17 +633,17 @@ void MainWindow::onExport_PbSocketClick() {
                 QLineEdit::Normal, this->sock_address + ":" + QString::number(this->sock_port), &bOK);
             if (bOK)
             {
-                this->progressUpdate(0, "解析IP地址和端口...");
+                this->progressUpdate(0, "Resolve IP address and port...");
                 std::string ip = address.split(":").at(0).toStdString();
                 int port = address.split(":").at(1).toInt();
                 this->ui->Export_PbSocket->setText("建立服务器...");
                 QApplication::processEvents();
 
-                this->progressUpdate(70, "等待TCP连接中...");
+                this->progressUpdate(70, "Waitting for TCP connection...");
                 if(this->exptImpl->SocketInit(ip, port)){
                     this->onExportingSocket = true;
                     this->ui->Export_PbSocket->setText("关闭采集服务器");
-                    this->progressUpdate(100, "连接成功。");
+                    this->progressUpdate(100, "connected.");
                     //
                     if(!this->onExportingLocal){  //确保都关闭才重置
                         this->exptIdx = 0;
@@ -648,7 +653,7 @@ void MainWindow::onExport_PbSocketClick() {
                     this->ui->Export_PbSocket->setText("启动采集服务器");
                     QMessageBox::warning(this, "错误", "无法启动服务器"+address);
                     this->exptImpl->SocketClose();
-                    this->progressUpdate(100, "连接失败。");
+                    this->progressUpdate(100, "connection failed.");
                 }
             }
         }

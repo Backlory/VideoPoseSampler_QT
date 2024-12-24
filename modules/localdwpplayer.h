@@ -8,7 +8,7 @@
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QFile>
-#include "../3rdparty/Aurora/APIStructures.h"
+#include "../Aurora/APIStructures.h"
 
 using data_ptr7 = std::shared_ptr<QuatTransformationStruct>;
 

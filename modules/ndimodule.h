@@ -5,8 +5,8 @@
 #include<QDebug>
 #include <vector>
 #include "Sophus/so3.hpp"
-#include "../3rdparty/Aurora/INIFileRW.h"
-#include "../3rdparty/Aurora/CommandHandling.h" // 在Sophus后导入
+#include "../Aurora/INIFileRW.h"
+#include "../Aurora/CommandHandling.h" // 在Sophus后导入
 #include <boost/thread.hpp>
 #include <Eigen/Dense>
 #include <iostream>
